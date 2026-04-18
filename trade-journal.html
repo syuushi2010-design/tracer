@@ -656,20 +656,18 @@ async function syncToSheet(silent) {
   if (indicator) { indicator.textContent = '⏳ 同期中...'; indicator.style.color = 'var(--warn)'; }
   try {
     const tradesNoImage = trades.map(t => { const {image, ...rest} = t; return rest; });
-    // Use no-cors for POST (GAS redirects break CORS)
-    await fetch(settings.gasUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'save', trades: tradesNoImage })
-    });
-    // no-cors means we can't read the response, but if no exception = success
-    const now = new Date().toLocaleTimeString('ja-JP');
-    if (indicator) { indicator.textContent = '✅ 同期済み ' + now; indicator.style.color = 'var(--win)'; }
-    if (!silent) showToast('✅ Googleスプレッドシートに同期しました');
+    const encoded = encodeURIComponent(JSON.stringify(tradesNoImage));
+    const url = settings.gasUrl + '?action=save&trades=' + encoded;
+    const res = await fetch(url, { method: 'GET' });
+    const data = await res.json();
+    if (data.ok) {
+      const now = new Date().toLocaleTimeString('ja-JP');
+      if (indicator) { indicator.textContent = '✅ 同期済み ' + now; indicator.style.color = 'var(--win)'; }
+      if (!silent) showToast('✅ Googleスプレッドシートに同期しました');
+    } else throw new Error('sync failed');
   } catch(err) {
     if (indicator) { indicator.textContent = '❌ 同期失敗'; indicator.style.color = 'var(--loss)'; }
-    if (!silent) showToast('⚠️ 同期に失敗しました（オフライン？）');
+    if (!silent) showToast('⚠️ 同期に失敗しました');
   }
 }
 
@@ -677,10 +675,7 @@ async function loadFromSheet() {
   if (!settings.gasUrl) { showToast('⚠️ スプレッドシートURLが未設定です'); return; }
   showToast('⏳ データを読み込み中...');
   try {
-    const res = await fetch(settings.gasUrl + '?action=load', {
-      method: 'GET',
-      mode: 'cors'
-    });
+    const res = await fetch(settings.gasUrl, { method: 'GET' });
     const data = await res.json();
     if (data.ok && Array.isArray(data.data)) {
       const imageMap = {};
