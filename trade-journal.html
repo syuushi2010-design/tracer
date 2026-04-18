@@ -927,15 +927,15 @@ async function analyzeChart(dataUrl) {
 ・白のライン → 週足 / 月足の押し安値 / 戻り高値
 チャートに見えるラインの色をこの凡例に基づいて解釈し、エントリー根拠の分析に活用してください。
 
-最後にJSONのみ（コードブロックなし）：{"trend":"上昇/下降/横ばい","pattern":"パターン名またはなし","suggestion":"ロング/ショート/様子見","risk":"低/中/高"}` }
+最後にJSONのみ（コードブロックなし）：{"trend":"上昇/下降/横ばい","pattern":"パターン名またはなし","suggestion":"ロング/ショート/様子見","risk":"低/中/高","pair":"USDJPY等の通貨ペア（例:USDJPY,EURJPY,GBPJPY,EURUSD等、不明な場合はnull）","entry":"現在の価格または直近の価格（数値のみ、不明な場合はnull）"}` }
         ]}]
       })
     });
     const data = await res.json();
     const fullText = data.content.map(i => i.text || '').join('\n');
     let parsed = null;
-    try { const m = fullText.match(/\{[^{}]+\}/); if (m) parsed = JSON.parse(m[0]); } catch(e){}
-    aiContent.textContent = fullText.replace(/\{[^{}]+\}/, '').trim();
+    try { const m = fullText.match(/\{[\s\S]*?\}/); if (m) parsed = JSON.parse(m[0]); } catch(e){}
+    aiContent.textContent = fullText.replace(/\{[\s\S]*?\}/, '').trim();
     aiStatus.textContent = 'AI解析完了'; aiPulse.style.display = 'none';
     if (parsed) {
       const chips = [];
@@ -948,12 +948,26 @@ async function analyzeChart(dataUrl) {
         if (s.includes('ショート')) document.getElementById('direction').value = 'SHORT';
       }
       if (parsed.risk) chips.push('⚠️ リスク: ' + parsed.risk);
-      aiChips.innerHTML = chips.map(c => `<span class="ai-chip">${c}</span>`).join('');
-      if (parsed.pattern && parsed.pattern !== 'なし') {
-        document.querySelectorAll('#pattern-tags .tag').forEach(t => {
-          if (t.textContent.includes(parsed.pattern) || parsed.pattern.includes(t.textContent.trim())) t.click();
-        });
+
+      // 通貨ペア自動入力
+      if (parsed.pair && parsed.pair !== 'null') {
+        const pairSelect = document.getElementById('pair');
+        const options = Array.from(pairSelect.options).map(o => o.value);
+        const matched = options.find(o => o === parsed.pair.toUpperCase().replace('/',''));
+        if (matched) {
+          pairSelect.value = matched;
+          chips.push('💱 ' + matched);
+        }
       }
+
+      // エントリー価格自動入力
+      if (parsed.entry && parsed.entry !== 'null' && !isNaN(parseFloat(parsed.entry))) {
+        document.getElementById('entry').value = parseFloat(parsed.entry);
+        chips.push('📍 エントリー: ' + parsed.entry);
+        recalc();
+      }
+
+      aiChips.innerHTML = chips.map(c => `<span class="ai-chip">${c}</span>`).join('');
     }
   } catch(err) {
     aiStatus.textContent = '解析エラー'; aiContent.textContent = '手動で入力してください。'; aiPulse.style.display = 'none';
