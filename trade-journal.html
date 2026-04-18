@@ -910,7 +910,7 @@ async function analyzeChart(dataUrl) {
   try {
     const base64 = dataUrl.split(',')[1];
     const mediaType = dataUrl.split(';')[0].split(':')[1];
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("https://tight-cloud-7cdb.syuushi2010.workers.dev", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514", max_tokens: 1000,
@@ -1462,7 +1462,7 @@ ${closed.slice(0,20).map(t => `[${t.pair} ${t.dir}] エントリー:${t.entry} S
 レポートは見やすく構造化して出力してください。`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://tight-cloud-7cdb.syuushi2010.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
