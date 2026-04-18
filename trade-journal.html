@@ -913,7 +913,7 @@ async function analyzeChart(dataUrl) {
     const res = await fetch("https://tight-cloud-7cdb.syuushi2010.workers.dev", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514", max_tokens: 1000,
+        model: "claude-sonnet-4-5", max_tokens: 1000,
         messages: [{ role: "user", content: [
           { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
           { type: "text", text: `このFXチャートを分析し、日本語で簡潔に教えてください：
@@ -1466,7 +1466,7 @@ ${closed.slice(0,20).map(t => `[${t.pair} ${t.dir}] エントリー:${t.entry} S
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }]
       })
