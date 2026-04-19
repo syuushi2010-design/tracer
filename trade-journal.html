@@ -1093,9 +1093,9 @@ function renderHistory() {
             <div class="detail-field"><label>SL</label><span id="sl-val-${t.id}">${sl}</span></div>
             <div class="detail-field"><label>RR比</label><span>${t.rr?'1:'+t.rr:'—'}</span></div>
             <div class="detail-field"><label>推奨ロット</label><span>${t.recommendedLots||'—'}</span></div>
-            <div class="detail-field"><label>決済価格</label><span>${t.exitPrice||'—'}</span></div>
-            <div class="detail-field"><label>実績 pips</label><span>${t.actualPips??'—'}</span></div>
-            <div class="detail-field"><label>損益（円）</label><span class="${t.actualPnl>0?'pos':t.actualPnl<0?'neg':''}">${t.actualPnl!=null?(t.actualPnl>=0?'+¥':'-¥')+Math.abs(t.actualPnl).toLocaleString():'—'}</span></div>
+            <div class="detail-field"><label>決済価格</label><span>${t.exits && t.exits.length > 1 ? t.exits.map((e,i)=>`${i+1}回目:${e.price}`).join(' / ') : t.exitPrice||'—'}</span></div>
+            <div class="detail-field"><label>実績 pips</label><span>${t.exits && t.exits.length > 1 ? t.exits.map((e,i)=>`${i+1}回目:${e.pips>=0?'+':''}${e.pips}`).join(' / ') : t.actualPips??'—'}</span></div>
+            <div class="detail-field"><label>損益（円）</label><span class="${t.actualPnl>0?'pos':t.actualPnl<0?'neg':''}">${t.actualPnl!=null?(t.actualPnl>=0?'+¥':'-¥')+Math.abs(t.actualPnl).toLocaleString():'—'}${t.exits&&t.exits.length>1?' (合算)':''}</span></div>
             <div class="detail-field"><label>自信度</label><span style="color:${t.confidence==='高'?'var(--win)':t.confidence==='低'?'var(--loss)':'var(--warn)'}">${t.confidence||'—'}</span></div>
             <div class="detail-field"><label>決済理由</label><span>${t.exitReason||'—'}</span></div>
           </div>
@@ -1124,22 +1124,45 @@ function renderHistory() {
             <button class="inline-btn" onclick="updateSL(${t.id})">更新</button>
           </div>
           ${!hasClosed?`
-          <div class="result-update" style="margin-top:8px">
-            <span class="inline-label">決済価格:</span>
-            <input class="inline-input" type="number" id="exit-${t.id}" step="0.001" placeholder="決済価格">
-            <select class="inline-input" id="exit-reason-${t.id}" style="width:140px">
-              <option value="">決済理由</option>
-              <option value="TP到達">✅ TP到達</option>
-              <option value="SL到達">❌ SL到達</option>
-              <option value="手動決済（根拠崩れ）">🧠 根拠崩れ</option>
-              <option value="手動決済（利益確保）">💰 利益確保</option>
-              <option value="時間切れ">⏰ 時間切れ</option>
-            </select>
-            <button class="result-btn result-btn-win" onclick="updateResult(${t.id},'WIN')">WIN</button>
-            <button class="result-btn result-btn-loss" onclick="updateResult(${t.id},'LOSS')">LOSS</button>
-            <button class="result-btn result-btn-be" onclick="updateResult(${t.id},'BE')">BE</button>
+          <div style="margin-top:10px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:8px">決済入力（2回目は分割決済の場合のみ）</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">1回目（必須）</div>
+                <input class="inline-input" type="number" id="exit1-${t.id}" step="0.001" placeholder="決済価格" style="width:100%;margin-bottom:6px">
+                <select class="inline-input" id="exit-reason1-${t.id}" style="width:100%">
+                  <option value="">決済理由</option>
+                  <option value="TP到達">✅ TP到達</option>
+                  <option value="SL到達">❌ SL到達</option>
+                  <option value="手動決済（根拠崩れ）">🧠 根拠崩れ</option>
+                  <option value="手動決済（利益確保）">💰 利益確保</option>
+                  <option value="時間切れ">⏰ 時間切れ</option>
+                </select>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">2回目（分割時のみ）</div>
+                <input class="inline-input" type="number" id="exit2-${t.id}" step="0.001" placeholder="決済価格" style="width:100%;margin-bottom:6px">
+                <select class="inline-input" id="exit-reason2-${t.id}" style="width:100%">
+                  <option value="">決済理由</option>
+                  <option value="TP到達">✅ TP到達</option>
+                  <option value="SL到達">❌ SL到達</option>
+                  <option value="手動決済（根拠崩れ）">🧠 根拠崩れ</option>
+                  <option value="手動決済（利益確保）">💰 利益確保</option>
+                  <option value="時間切れ">⏰ 時間切れ</option>
+                </select>
+              </div>
+            </div>
+            <div class="result-update">
+              <button class="result-btn result-btn-win" onclick="updateResult(${t.id},'WIN')">WIN</button>
+              <button class="result-btn result-btn-loss" onclick="updateResult(${t.id},'LOSS')">LOSS</button>
+              <button class="result-btn result-btn-be" onclick="updateResult(${t.id},'BE')">BE</button>
+            </div>
           </div>`:''}
-          ${hasClosed && t.exitReason ? `<div style="margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);">決済理由: ${t.exitReason}</div>` : ''}
+          ${hasClosed ? `<div style="margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);">
+            ${t.exits && t.exits.length > 1
+              ? t.exits.map((e,i) => `決済${i+1}: ${e.price} (${e.reason||'—'}) ${e.pips>=0?'+':''}${e.pips}pips`).join(' ／ ')
+              : `決済: ${t.exitPrice||'—'} (${t.exitReason||'—'})`}
+          </div>` : ''}
         <div class="detail-actions">
           <button class="btn btn-danger" style="font-size:11px;padding:8px 14px" onclick="deleteTrade(${t.id})">削除</button>
         </div>
@@ -1169,17 +1192,52 @@ function updateSL(id) {
 function updateResult(id, result) {
   const t = trades.find(x => x.id===id);
   if (!t) return;
-  const exitPrice = parseFloat(document.getElementById('exit-'+id)?.value);
-  const exitReason = document.getElementById('exit-reason-'+id)?.value || null;
-  t.result = result;
-  t.exitReason = exitReason;
-  if (!isNaN(exitPrice)) {
-    t.exitPrice = exitPrice;
-    const diff = t.dir==='LONG' ? exitPrice - t.entry : t.entry - exitPrice;
-    t.actualPips = Math.round(diff / getPipSize(t.pair));
-    const lots = t.recommendedLots || 1;
-    t.actualPnl = pnlJpy(Math.abs(t.actualPips), t.pair, lots) * (t.actualPips >= 0 ? 1 : -1);
+
+  const exit1Price = parseFloat(document.getElementById('exit1-'+id)?.value);
+  const exit1Reason = document.getElementById('exit-reason1-'+id)?.value || null;
+  const exit2Price = parseFloat(document.getElementById('exit2-'+id)?.value);
+  const exit2Reason = document.getElementById('exit-reason2-'+id)?.value || null;
+
+  if (isNaN(exit1Price)) { showToast('⚠️ 1回目の決済価格を入力してください'); return; }
+
+  const lots = t.recommendedLots || 1;
+  const pipSize = getPipSize(t.pair);
+  const hasSplit = !isNaN(exit2Price);
+
+  if (!hasSplit) {
+    // 通常決済（全ロット）
+    const diff = t.dir==='LONG' ? exit1Price - t.entry : t.entry - exit1Price;
+    const pips = Math.round(diff / pipSize);
+    const pnl = pnlJpy(Math.abs(pips), t.pair, lots) * (pips >= 0 ? 1 : -1);
+    t.exits = [{ price: exit1Price, reason: exit1Reason, pips, pnl, lots }];
+    t.exitPrice = exit1Price;
+    t.exitReason = exit1Reason;
+    t.actualPips = pips;
+    t.actualPnl = pnl;
+  } else {
+    // 分割決済（1:1 = 各ロットの半分）
+    const halfLots = Math.round(lots / 2 * 100) / 100;
+
+    const diff1 = t.dir==='LONG' ? exit1Price - t.entry : t.entry - exit1Price;
+    const pips1 = Math.round(diff1 / pipSize);
+    const pnl1 = pnlJpy(Math.abs(pips1), t.pair, halfLots) * (pips1 >= 0 ? 1 : -1);
+
+    const diff2 = t.dir==='LONG' ? exit2Price - t.entry : t.entry - exit2Price;
+    const pips2 = Math.round(diff2 / pipSize);
+    const pnl2 = pnlJpy(Math.abs(pips2), t.pair, halfLots) * (pips2 >= 0 ? 1 : -1);
+
+    t.exits = [
+      { price: exit1Price, reason: exit1Reason, pips: pips1, pnl: pnl1, lots: halfLots },
+      { price: exit2Price, reason: exit2Reason, pips: pips2, pnl: pnl2, lots: halfLots }
+    ];
+    t.exitPrice = exit2Price;
+    t.exitReason = exit2Reason;
+    // 平均pipsと合計pnl
+    t.actualPips = Math.round((pips1 + pips2) / 2);
+    t.actualPnl = pnl1 + pnl2;
   }
+
+  t.result = result;
   saveTrades(); renderHistory(); showToast('✅ 結果を更新しました');
   syncToSheet(true);
 }
