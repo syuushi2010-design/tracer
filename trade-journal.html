@@ -1153,17 +1153,49 @@ function renderHistory() {
                 </select>
               </div>
             </div>
+            <div style="margin-bottom:10px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">決済後の振り返り・敗因分析</div>
+              <textarea id="exit-memo-${t.id}" rows="3" placeholder="なぜこの結果になったか、次回への気づき、反省点など..." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;padding:10px 12px;outline:none;resize:vertical;line-height:1.6;transition:border-color 0.2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            </div>
             <div class="result-update">
               <button class="result-btn result-btn-win" onclick="updateResult(${t.id},'WIN')">WIN</button>
               <button class="result-btn result-btn-loss" onclick="updateResult(${t.id},'LOSS')">LOSS</button>
               <button class="result-btn result-btn-be" onclick="updateResult(${t.id},'BE')">BE</button>
             </div>
-          </div>`:''}
-          ${hasClosed ? `<div style="margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);">
-            ${t.exits && t.exits.length > 1
-              ? t.exits.map((e,i) => `決済${i+1}: ${e.price} (${e.reason||'—'}) ${e.pips>=0?'+':''}${e.pips}pips`).join(' ／ ')
-              : `決済: ${t.exitPrice||'—'} (${t.exitReason||'—'})`}
-          </div>` : ''}
+          </div>`:`
+          <div style="margin-top:10px">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);margin-bottom:8px">決済情報を編集</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">1回目</div>
+                <input class="inline-input" type="number" id="exit1-${t.id}" step="0.001" value="${t.exits?.[0]?.price||t.exitPrice||''}" style="width:100%;margin-bottom:6px">
+                <select class="inline-input" id="exit-reason1-${t.id}" style="width:100%">
+                  <option value="">決済理由</option>
+                  ${['TP到達','SL到達','手動決済（根拠崩れ）','手動決済（利益確保）','時間切れ'].map(r=>`<option value="${r}" ${(t.exits?.[0]?.reason||t.exitReason)===r?'selected':''}>${r}</option>`).join('')}
+                </select>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">2回目（分割時のみ）</div>
+                <input class="inline-input" type="number" id="exit2-${t.id}" step="0.001" value="${t.exits?.[1]?.price||''}" style="width:100%;margin-bottom:6px">
+                <select class="inline-input" id="exit-reason2-${t.id}" style="width:100%">
+                  <option value="">決済理由</option>
+                  ${['TP到達','SL到達','手動決済（根拠崩れ）','手動決済（利益確保）','時間切れ'].map(r=>`<option value="${r}" ${t.exits?.[1]?.reason===r?'selected':''}>${r}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+            <div style="margin-bottom:10px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">決済後の振り返り・敗因分析</div>
+              <textarea id="exit-memo-${t.id}" rows="3" placeholder="なぜこの結果になったか、次回への気づき、反省点など..." style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:13px;padding:10px 12px;outline:none;resize:vertical;line-height:1.6;transition:border-color 0.2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">${t.exitMemo||''}</textarea>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)">結果:</span>
+              <button class="result-btn result-btn-win ${t.result==='WIN'?'act':''}" onclick="updateResult(${t.id},'WIN')">WIN</button>
+              <button class="result-btn result-btn-loss ${t.result==='LOSS'?'act':''}" onclick="updateResult(${t.id},'LOSS')">LOSS</button>
+              <button class="result-btn result-btn-be ${t.result==='BE'?'act':''}" onclick="updateResult(${t.id},'BE')">BE</button>
+              <button class="inline-btn" onclick="updateResult(${t.id},'${t.result}')">💾 更新</button>
+            </div>
+            ${t.exitMemo ? `<div style="margin-top:8px;background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.15);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.6;font-style:italic">📝 ${t.exitMemo}</div>` : ''}
+          </div>`}
         <div class="detail-actions">
           <button class="btn btn-danger" style="font-size:11px;padding:8px 14px" onclick="deleteTrade(${t.id})">削除</button>
         </div>
@@ -1198,6 +1230,7 @@ function updateResult(id, result) {
   const exit1Reason = document.getElementById('exit-reason1-'+id)?.value || null;
   const exit2Price = parseFloat(document.getElementById('exit2-'+id)?.value);
   const exit2Reason = document.getElementById('exit-reason2-'+id)?.value || null;
+  const exitMemo = document.getElementById('exit-memo-'+id)?.value || null;
 
   if (isNaN(exit1Price)) { showToast('⚠️ 1回目の決済価格を入力してください'); return; }
 
@@ -1239,6 +1272,7 @@ function updateResult(id, result) {
   }
 
   t.result = result;
+  t.exitMemo = exitMemo;
   saveTrades(); renderHistory(); showToast('✅ 結果を更新しました');
   syncToSheet(true);
 }
