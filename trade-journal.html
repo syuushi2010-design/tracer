@@ -143,7 +143,7 @@
   .result-btn-be:hover { background: rgba(255,184,0,0.15); }
 
   /* ANALYTICS */
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 24px; }
   .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
   .stat-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
   .stat-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); }
@@ -1300,6 +1300,9 @@ function renderAnalytics() {
   const totalPnl  = closed.reduce((s,t) => s+(t.actualPnl||0), 0);
   const avgRR = closed.filter(t=>t.rr).length
     ? +(closed.filter(t=>t.rr).reduce((s,t,_,a)=>s+t.rr/a.length,0)).toFixed(2) : 0;
+  const avgPips = closed.length ? +(totalPips / closed.length).toFixed(1) : 0;
+  const winPips = wins.reduce((s,t) => s+(t.actualPips||0), 0);
+  const lossPips = losses.reduce((s,t) => s+(t.actualPips||0), 0);
 
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-box">
@@ -1311,6 +1314,16 @@ function renderAnalytics() {
       <div class="stat-label">累積損益（円）</div>
       <div class="stat-value ${totalPnl>=0?'pos':'neg'}">${totalPnl>=0?'+':''} ¥${Math.abs(totalPnl).toLocaleString()}</div>
       <div class="stat-sub">累積 ${totalPips>=0?'+':''}${totalPips} pips</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">総獲得 PIPS</div>
+      <div class="stat-value ${totalPips>=0?'pos':'neg'}">${totalPips>=0?'+':''}${totalPips}</div>
+      <div class="stat-sub">勝 +${winPips} / 負 ${lossPips}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">平均獲得 PIPS</div>
+      <div class="stat-value ${avgPips>=0?'pos':'neg'}">${avgPips>=0?'+':''}${avgPips}</div>
+      <div class="stat-sub">決済済み ${closed.length}件の平均</div>
     </div>
     <div class="stat-box">
       <div class="stat-label">平均 RR 比</div>
