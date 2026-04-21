@@ -1300,6 +1300,17 @@ function renderAnalytics() {
   const totalPnl  = closed.reduce((s,t) => s+(t.actualPnl||0), 0);
   const avgRR = closed.filter(t=>t.rr).length
     ? +(closed.filter(t=>t.rr).reduce((s,t,_,a)=>s+t.rr/a.length,0)).toFixed(2) : 0;
+  const avgPips = closed.length ? +(totalPips / closed.length).toFixed(1) : 0;
+  const winPips = wins.reduce((s,t) => s+(t.actualPips||0), 0);
+  const lossPips = Math.abs(losses.reduce((s,t) => s+(t.actualPips||0), 0));
+  const avgWinPips = wins.length ? +(winPips / wins.length).toFixed(1) : 0;
+  const avgLossPips = losses.length ? +(lossPips / losses.length).toFixed(1) : 0;
+  // プロフィットファクター: 総利益pips ÷ 総損失pips
+  const pf = lossPips > 0 ? +(winPips / lossPips).toFixed(2) : winPips > 0 ? Infinity : 0;
+  const pfStr = pf === Infinity ? '∞' : pf.toFixed(2);
+  // 期待値: 勝率×平均勝ちpips - 負け率×平均負けpips
+  const wrRate = closed.length ? wins.length / closed.length : 0;
+  const ev = closed.length ? +((wrRate * avgWinPips) - ((1 - wrRate) * avgLossPips)).toFixed(1) : 0;
 
   document.getElementById('stats-grid').innerHTML = `
     <div class="stat-box">
@@ -1311,6 +1322,26 @@ function renderAnalytics() {
       <div class="stat-label">累積損益（円）</div>
       <div class="stat-value ${totalPnl>=0?'pos':'neg'}">${totalPnl>=0?'+':''} ¥${Math.abs(totalPnl).toLocaleString()}</div>
       <div class="stat-sub">累積 ${totalPips>=0?'+':''}${totalPips} pips</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">総獲得 PIPS</div>
+      <div class="stat-value ${totalPips>=0?'pos':'neg'}">${totalPips>=0?'+':''}${totalPips}</div>
+      <div class="stat-sub">勝 +${winPips} / 負 -${lossPips}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">平均獲得 PIPS</div>
+      <div class="stat-value ${avgPips>=0?'pos':'neg'}">${avgPips>=0?'+':''}${avgPips}</div>
+      <div class="stat-sub">勝 +${avgWinPips} / 負 -${avgLossPips}</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">プロフィットファクター</div>
+      <div class="stat-value ${pf>=1.5?'pos':pf>=1?'':'neg'}">${pfStr}</div>
+      <div class="stat-sub">1.5以上が理想</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">期待値（pips）</div>
+      <div class="stat-value ${ev>=0?'pos':'neg'}">${ev>=0?'+':''}${ev}</div>
+      <div class="stat-sub">1トレードあたり</div>
     </div>
     <div class="stat-box">
       <div class="stat-label">平均 RR 比</div>
