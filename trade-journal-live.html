@@ -3,28 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TRACER — Demo Trade Journal</title>
+<title>TRACER LIVE — Real Trade Journal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0c10; --surface: #111318; --surface2: #181b22; --border: #1e2330;
-    --accent: #00e5a0; --accent2: #0077ff; --danger: #ff4060; --warn: #ffb800;
-    --text: #e8eaf0; --text2: #7a8099; --text3: #3d4259;
-    --win: #00e5a0; --loss: #ff4060; --be: #ffb800;
+    --bg: #eef2f7; --surface: #ffffff; --surface2: #e2eaf3; --border: #c0d0e0;
+    --accent: #0077cc; --accent2: #0055aa; --danger: #d93050; --warn: #d07000;
+    --text: #0a1828; --text2: #4a6080; --text3: #8aa0bb;
+    --win: #0077cc; --loss: #d93050; --be: #d07000;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; min-height: 100vh; overflow-x: hidden; }
   body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.4; pointer-events: none; z-index: 0; }
 
   #app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
-  header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid var(--border); background: rgba(10,12,16,0.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid var(--border); background: rgba(238,242,247,0.94); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; }
   .logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0.05em; }
   .logo span { color: var(--accent); }
   nav { display: flex; gap: 4px; }
   nav button { background: none; border: none; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text2); padding: 8px 14px; border-radius: 6px; transition: all 0.2s; letter-spacing: 0.04em; text-transform: uppercase; }
   nav button:hover { color: var(--text); background: var(--surface); }
-  nav button.active { color: var(--accent); background: rgba(0,229,160,0.08); }
+  nav button.active { color: var(--accent); background: rgba(0,119,204,0.08); }
   main { flex: 1; padding: 32px; max-width: 1200px; margin: 0 auto; width: 100%; }
 
   .view { display: none; }
@@ -38,21 +38,21 @@
   /* RECORD */
   .record-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .upload-zone { grid-column: 1/-1; border: 2px dashed var(--border); border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface2); position: relative; overflow: hidden; }
-  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(0,229,160,0.04); }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(0,119,204,0.04); }
   .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
   .upload-icon { font-size: 36px; margin-bottom: 12px; }
   .upload-text { color: var(--text2); font-size: 14px; }
   .upload-text strong { color: var(--accent); }
   #preview-img { width: 100%; border-radius: 8px; display: none; margin-bottom: 16px; max-height: 300px; object-fit: contain; }
 
-  .ai-box { grid-column: 1/-1; background: rgba(0,229,160,0.05); border: 1px solid rgba(0,229,160,0.2); border-radius: 10px; padding: 16px 20px; display: none; }
+  .ai-box { grid-column: 1/-1; background: rgba(0,119,204,0.05); border: 1px solid rgba(0,119,204,0.2); border-radius: 10px; padding: 16px 20px; display: none; }
   .ai-box.show { display: block; animation: fadeIn 0.3s; }
   .ai-box-header { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
   .pulse { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 1.2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
   .ai-content { color: var(--text); font-size: 13px; line-height: 1.7; }
   .ai-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .ai-chip { background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.25); color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px 10px; border-radius: 100px; }
+  .ai-chip { background: rgba(0,119,204,0.1); border: 1px solid rgba(0,119,204,0.25); color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px 10px; border-radius: 100px; }
 
   .field { display: flex; flex-direction: column; gap: 6px; }
   .field label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -63,7 +63,7 @@
   /* 6-col calc row */
   .calc-row { grid-column: 1/-1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
   .calc-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; text-align: center; }
-  .calc-box.highlight { border-color: rgba(0,229,160,0.35); background: rgba(0,229,160,0.05); }
+  .calc-box.highlight { border-color: rgba(0,119,204,0.35); background: rgba(0,119,204,0.05); }
   .calc-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
   .calc-value { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 500; color: var(--accent); }
   .calc-value.sm { font-size: 13px; }
@@ -76,12 +76,12 @@
   .tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
   .tag { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); font-size: 12px; padding: 6px 12px; border-radius: 100px; cursor: pointer; transition: all 0.15s; user-select: none; }
   .tag:hover { border-color: var(--accent); color: var(--accent); }
-  .tag.selected { background: rgba(0,229,160,0.12); border-color: var(--accent); color: var(--accent); }
+  .tag.selected { background: rgba(0,119,204,0.12); border-color: var(--accent); color: var(--accent); }
   .tag.emo-selected { background: rgba(255,184,0,0.12); border-color: var(--warn); color: var(--warn); }
 
   .btn { display: inline-flex; align-items: center; gap: 8px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
-  .btn-primary { background: var(--accent); color: #000; }
-  .btn-primary:hover { background: #00ffb3; transform: translateY(-1px); }
+  .btn-primary { background: var(--accent);  }
+  .btn-primary:hover { background: #005faa; transform: translateY(-1px); }
   .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
   .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
   .btn-danger { background: rgba(255,64,96,0.12); color: var(--danger); border: 1px solid rgba(255,64,96,0.25); }
@@ -101,7 +101,7 @@
   .trade-tags { display: flex; gap: 6px; flex-wrap: wrap; }
   .trade-tag-sm { font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 3px 8px; border-radius: 100px; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
   .trade-dir { font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 4px 10px; border-radius: 6px; font-weight: 500; }
-  .dir-long { background: rgba(0,229,160,0.1); color: var(--accent); }
+  .dir-long { background: rgba(0,119,204,0.1); color: var(--accent); }
   .dir-short { background: rgba(255,64,96,0.1); color: var(--danger); }
   .trade-pips { font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-align: right; line-height: 1.5; color: var(--text2); }
   .trade-pnl { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; text-align: right; min-width: 100px; }
@@ -109,7 +109,7 @@
   .pips-neg,.pnl-neg { color: var(--loss); }
   .pips-be,.pnl-be { color: var(--be); }
   .trade-result-badge { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .badge-win { background: rgba(0,229,160,0.12); color: var(--win); }
+  .badge-win { background: rgba(0,119,204,0.12); color: var(--win); }
   .badge-loss { background: rgba(255,64,96,0.12); color: var(--loss); }
   .badge-be { background: rgba(255,184,0,0.12); color: var(--be); }
   .badge-open { background: rgba(0,119,255,0.12); color: var(--accent2); }
@@ -131,12 +131,12 @@
   .inline-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px 10px; outline: none; width: 130px; }
   .inline-input:focus { border-color: var(--accent); }
   .inline-btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--accent); color: var(--accent); background: transparent; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-  .inline-btn:hover { background: rgba(0,229,160,0.1); }
+  .inline-btn:hover { background: rgba(0,119,204,0.1); }
 
   .result-update { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .result-btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; padding: 6px 14px; border-radius: 6px; border: 1px solid; cursor: pointer; transition: all 0.15s; }
   .result-btn-win { border-color: var(--win); color: var(--win); background: transparent; }
-  .result-btn-win:hover { background: rgba(0,229,160,0.15); }
+  .result-btn-win:hover { background: rgba(0,119,204,0.15); }
   .result-btn-loss { border-color: var(--loss); color: var(--loss); background: transparent; }
   .result-btn-loss:hover { background: rgba(255,64,96,0.15); }
   .result-btn-be { border-color: var(--be); color: var(--be); background: transparent; }
@@ -154,7 +154,7 @@
 
   .chart-toggle { display: flex; gap: 6px; margin-bottom: 14px; }
   .toggle-btn { font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 4px 12px; border-radius: 100px; border: 1px solid var(--border); color: var(--text2); background: none; cursor: pointer; transition: all 0.15s; }
-  .toggle-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.08); }
+  .toggle-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,119,204,0.08); }
 
   .bar-chart { display: flex; flex-direction: column; gap: 10px; }
   .bar-row { display: flex; align-items: center; gap: 12px; }
@@ -181,7 +181,7 @@
   .settings-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text2); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
   .settings-title::before { content: ''; display: inline-block; width: 3px; height: 14px; background: var(--accent); border-radius: 2px; }
   .settings-hint { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); margin-top: 4px; }
-  .settings-preview { background: var(--surface2); border: 1px solid rgba(0,229,160,0.2); border-radius: 8px; padding: 14px 16px; margin-top: 16px; }
+  .settings-preview { background: var(--surface2); border: 1px solid rgba(0,119,204,0.2); border-radius: 8px; padding: 14px 16px; margin-top: 16px; }
   .settings-preview-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
   .settings-preview-value { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
   .disp-row { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
@@ -190,7 +190,7 @@
   .empty-icon { font-size: 48px; margin-bottom: 16px; }
   .empty-text { font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
 
-  #toast { position: fixed; bottom: 32px; right: 32px; background: var(--accent); color: #000; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; padding: 12px 20px; border-radius: 8px; opacity: 0; transform: translateY(8px); transition: all 0.3s; z-index: 999; pointer-events: none; }
+  #toast { position: fixed; bottom: 32px; right: 32px; background: var(--accent);  font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; padding: 12px 20px; border-radius: 8px; opacity: 0; transform: translateY(8px); transition: all 0.3s; z-index: 999; pointer-events: none; }
   #toast.show { opacity: 1; transform: none; }
 
   .loading-dots::after { content: ''; animation: dots 1.2s steps(4,end) infinite; }
@@ -215,7 +215,7 @@
   #bottom-nav {
     display: none;
     position: fixed; bottom: 0; left: 0; right: 0;
-    background: rgba(10,12,16,0.96);
+    background: rgba(238,242,247,0.97);
     backdrop-filter: blur(16px);
     border-top: 1px solid var(--border);
     padding: 8px 0 max(8px, env(safe-area-inset-bottom));
@@ -226,7 +226,7 @@
   .bn-icon { font-size: 20px; line-height: 1; }
   .bn-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
   #bottom-nav button.active .bn-label { color: var(--accent); }
-  #bottom-nav button.active .bn-icon { filter: drop-shadow(0 0 6px rgba(0,229,160,0.5)); }
+  #bottom-nav button.active .bn-icon { filter: drop-shadow(0 0 6px rgba(0,119,204,0.5)); }
 
   @media (max-width: 700px) {
     header { padding: 12px 16px; }
@@ -276,7 +276,7 @@
 <body>
 <div id="app">
   <header>
-    <div class="logo">TRACER<span>.</span></div>
+    <div class="logo">TRACER <span>LIVE</span></div>
     <div id="sync-indicator" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);">—</div>
     <nav>
       <button class="active" onclick="switchView('record',this)">+ 記録</button>
@@ -413,12 +413,14 @@
           </div>
 
           <div class="calc-row">
-            <div class="calc-box highlight">
-              <div class="calc-label">推奨ロット</div>
-              <div class="calc-value" id="calc-lot">—</div>
+            <div class="calc-box highlight" style="display:flex;flex-direction:column;gap:6px">
+              <div class="calc-label">ロット数（手入力）</div>
+              <input type="number" id="lot-input" step="0.01" min="0.01" placeholder="例: 0.10"
+                style="background:var(--surface);border:1px solid var(--accent);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;padding:4px 8px;outline:none;width:100%;text-align:center"
+                oninput="recalc()">
             </div>
             <div class="calc-box highlight">
-              <div class="calc-label">最大損失（円）</div>
+              <div class="calc-label">想定損失（円）</div>
               <div class="calc-value danger sm" id="calc-maxloss">—</div>
             </div>
             <div class="calc-box">
@@ -485,6 +487,22 @@
 
     <!-- ANALYTICS -->
     <div class="view" id="view-analytics">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em">期間</span>
+        <div style="display:flex;gap:6px">
+          <button class="toggle-btn active" id="period-total" onclick="setPeriod('total',this)">トータル</button>
+          <button class="toggle-btn" id="period-year" onclick="setPeriod('year',this)">年別</button>
+          <button class="toggle-btn" id="period-month" onclick="setPeriod('month',this)">月別</button>
+        </div>
+        <select id="period-year-select" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 10px;outline:none" onchange="renderAnalytics()"></select>
+        <select id="period-month-select" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;padding:6px 10px;outline:none" onchange="renderAnalytics()">
+          <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+          <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+          <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+        <span id="period-label" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);margin-left:4px"></span>
+      </div>
       <div class="stats-grid" id="stats-grid"></div>
       <div class="analytics-grid">
         <div class="card"><div class="card-title">ペア別勝率</div><div class="bar-chart" id="pair-chart"></div></div>
@@ -520,29 +538,16 @@
     <div class="view" id="view-settings">
       <div class="settings-grid">
         <div class="settings-section">
-          <div class="settings-title">リスク管理設定</div>
-          <div class="field" style="margin-bottom:12px">
-            <label>1トレードの最大損失額（円）</label>
-            <input type="number" id="set-maxloss" step="1000" oninput="updatePreview()">
-            <div class="settings-hint">SL到達時にこの金額を超えないよう、ロット数を自動計算します</div>
-          </div>
+          <div class="settings-title">取引設定</div>
           <div class="field" style="margin-bottom:16px">
             <label>1ロットあたりの通貨数</label>
-            <input type="number" id="set-lotsize" step="1000" oninput="updatePreview()">
+            <input type="number" id="set-lotsize" step="1000">
             <div class="settings-hint">マイクロ: 1,000 ／ ミニ: 10,000 ／ スタンダード: 100,000</div>
-          </div>
-          <div class="settings-preview">
-            <div class="settings-preview-label">USD/JPY・SL 20pips 時の推奨ロット数（プレビュー）</div>
-            <div class="settings-preview-value" id="settings-preview-lot">—</div>
           </div>
           <button class="btn btn-primary" style="margin-top:16px;width:100%;justify-content:center" onclick="saveSettings()">設定を保存</button>
         </div>
         <div class="settings-section">
           <div class="settings-title">現在の設定</div>
-          <div class="disp-row">
-            <div class="calc-label">最大損失額</div>
-            <div class="calc-value" id="disp-maxloss" style="font-size:20px">—</div>
-          </div>
           <div class="disp-row">
             <div class="calc-label">1ロット通貨数</div>
             <div class="calc-value" id="disp-lotsize" style="font-size:20px">—</div>
@@ -633,8 +638,8 @@
 
 <script>
 // STATE
-let trades = JSON.parse(localStorage.getItem('tracer-trades') || '[]');
-let settings = JSON.parse(localStorage.getItem('tracer-settings') || '{"maxLoss":100000,"lotSize":10000,"gasUrl":""}');
+let trades = JSON.parse(localStorage.getItem('tracer-live-trades') || '[]');
+let settings = JSON.parse(localStorage.getItem('tracer-live-settings') || '{"lotSize":10000,"gasUrl":""}');
 let currentImage = null;
 let selectedPatterns = [];
 let confidence = '';
@@ -646,8 +651,8 @@ if (!settings.gasUrl) {
   saveSettingsStore();
 }
 
-function saveTrades() { localStorage.setItem('tracer-trades', JSON.stringify(trades)); }
-function saveSettingsStore() { localStorage.setItem('tracer-settings', JSON.stringify(settings)); }
+function saveTrades() { localStorage.setItem('tracer-live-trades', JSON.stringify(trades)); }
+function saveSettingsStore() { localStorage.setItem('tracer-live-settings', JSON.stringify(settings)); }
 
 // GOOGLE SHEETS SYNC
 async function syncToSheet(silent) {
@@ -660,9 +665,8 @@ async function syncToSheet(silent) {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'save', source: 'demo', trades: tradesNoImage })
+      body: JSON.stringify({ action: 'save', source: 'live', trades: tradesNoImage })
     });
-    // no-corsではレスポンスが読めないが、例外が出なければ送信成功とみなす
     const now = new Date().toLocaleTimeString('ja-JP');
     if (indicator) { indicator.textContent = '✅ 同期済み ' + now; indicator.style.color = 'var(--win)'; }
     if (!silent) showToast('✅ Googleスプレッドシートに同期しました');
@@ -676,7 +680,7 @@ async function loadFromSheet() {
   if (!settings.gasUrl) { showToast('⚠️ スプレッドシートURLが未設定です'); return; }
   showToast('⏳ データを読み込み中...');
   try {
-    const res = await fetch(settings.gasUrl + '?source=demo', { method: 'GET' });
+    const res = await fetch(settings.gasUrl + '?source=live', { method: 'GET' });
     const data = await res.json();
     if (data.ok && Array.isArray(data.data)) {
       const imageMap = {};
@@ -823,6 +827,7 @@ function recalc() {
   const entry = parseFloat(document.getElementById('entry').value);
   const tp    = parseFloat(document.getElementById('tp').value);
   const sl    = parseFloat(document.getElementById('sl').value);
+  const lots  = parseFloat(document.getElementById('lot-input').value);
 
   let slPips = null, tpPips = null;
 
@@ -849,21 +854,18 @@ function recalc() {
     rrEl.style.color = rr >= 2 ? 'var(--win)' : rr >= 1 ? 'var(--warn)' : 'var(--loss)';
   } else rrEl.textContent = '—';
 
-  const lotEl = document.getElementById('calc-lot');
   const lossEl = document.getElementById('calc-maxloss');
   const winEl  = document.getElementById('calc-maxwin');
 
-  if (slPips) {
-    const lots = recommendedLots(slPips, pair);
-    if (lots > 0) {
-      lotEl.textContent = lots + ' lot';
+  if (!isNaN(lots) && lots > 0) {
+    if (slPips) {
       lossEl.textContent = '-¥' + pnlJpy(slPips, pair, lots).toLocaleString();
-      if (tpPips) {
-        winEl.textContent = '+¥' + pnlJpy(tpPips, pair, lots).toLocaleString();
-        winEl.style.color = 'var(--win)';
-      } else { winEl.textContent = '—'; winEl.style.color = 'var(--accent)'; }
-    } else { lotEl.textContent = '—'; lossEl.textContent = '—'; winEl.textContent = '—'; }
-  } else { lotEl.textContent = '—'; lossEl.textContent = '—'; winEl.textContent = '—'; }
+    } else lossEl.textContent = '—';
+    if (tpPips) {
+      winEl.textContent = '+¥' + pnlJpy(tpPips, pair, lots).toLocaleString();
+      winEl.style.color = 'var(--win)';
+    } else { winEl.textContent = '—'; winEl.style.color = 'var(--accent)'; }
+  } else { lossEl.textContent = '—'; winEl.textContent = '—'; }
 }
 
 // CONFIDENCE
@@ -982,6 +984,7 @@ function saveTrade() {
   const entry = parseFloat(document.getElementById('entry').value);
   const tp    = parseFloat(document.getElementById('tp').value);
   const sl    = parseFloat(document.getElementById('sl').value);
+  const lots  = parseFloat(document.getElementById('lot-input').value);
   const mtf = {
     m15: { dir: document.getElementById('mtf-m15-dir').value },
     h1:  { dir: document.getElementById('mtf-h1-dir').value  },
@@ -996,6 +999,7 @@ function saveTrade() {
   };
   const memo  = document.getElementById('memo').value;
   if (!pair || isNaN(entry)) { showToast('⚠️ 通貨ペアとエントリー価格は必須です'); return; }
+  if (isNaN(lots) || lots <= 0) { showToast('⚠️ ロット数を入力してください'); return; }
 
   const tpPips = !isNaN(tp) ? toPips(Math.abs(tp - entry), pair) : null;
   let slPips = null;
@@ -1004,7 +1008,6 @@ function saveTrade() {
     if (diff > 0) slPips = toPips(diff, pair);
   }
   const rr = tpPips && slPips ? +(tpPips / slPips).toFixed(2) : null;
-  const lots = slPips ? recommendedLots(slPips, pair) : null;
 
   trades.unshift({
     id: Date.now(), date: new Date().toISOString(),
@@ -1012,8 +1015,7 @@ function saveTrade() {
     tp: isNaN(tp) ? null : tp,
     sl: isNaN(sl) ? null : sl,
     tpPips, slPips, rr,
-    recommendedLots: lots,
-    snapshotMaxLoss: settings.maxLoss,
+    lots,
     snapshotLotSize: settings.lotSize,
     mtf, rt,
     patterns: [],
@@ -1027,7 +1029,7 @@ function saveTrade() {
 }
 
 function clearForm() {
-  ['entry','tp','sl','memo'].forEach(id => document.getElementById(id).value = '');
+  ['entry','tp','sl','memo','lot-input'].forEach(id => document.getElementById(id).value = '');
   ['mtf-m15-dir','mtf-h1-dir','mtf-h4-dir','mtf-d1-dir'].forEach(id => { const el = document.getElementById(id); if(el) el.value = '順張り'; });
   ['rt-m15','rt-h1','rt-h4','rt-d1'].forEach(id => { const el = document.getElementById(id); if(el) el.value = 'なし'; });
   document.getElementById('preview-img').style.display = 'none';
@@ -1194,7 +1196,7 @@ function renderHistory() {
               <button class="result-btn result-btn-be ${t.result==='BE'?'act':''}" onclick="updateResult(${t.id},'BE')">BE</button>
               <button class="inline-btn" onclick="updateResult(${t.id},'${t.result}')">💾 更新</button>
             </div>
-            ${t.exitMemo ? `<div style="margin-top:8px;background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.15);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.6;font-style:italic">📝 ${t.exitMemo}</div>` : ''}
+            ${t.exitMemo ? `<div style="margin-top:8px;background:rgba(0,119,204,0.05);border:1px solid rgba(0,119,204,0.15);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.6;font-style:italic">📝 ${t.exitMemo}</div>` : ''}
           </div>`}
         <div class="detail-actions">
           <button class="btn btn-danger" style="font-size:11px;padding:8px 14px" onclick="deleteTrade(${t.id})">削除</button>
@@ -1216,9 +1218,8 @@ function updateSL(id) {
   if (diff > 0) {
     t.slPips = toPips(diff, t.pair);
     t.rr = t.tpPips ? +(t.tpPips / t.slPips).toFixed(2) : null;
-    t.recommendedLots = recommendedLots(t.slPips, t.pair);
   }
-  saveTrades(); renderHistory(); showToast('✅ SLを更新しました（ロット数再計算済み）');
+  saveTrades(); renderHistory(); showToast('✅ SLを更新しました');
   syncToSheet(true);
 }
 
@@ -1283,16 +1284,52 @@ function deleteTrade(id) {
   saveTrades(); renderHistory(); showToast('🗑 削除しました');
 }
 
+// ANALYTICS PERIOD
+let analyticsPeriod = 'total';
+
+function setPeriod(mode, btn) {
+  analyticsPeriod = mode;
+  document.querySelectorAll('#view-analytics .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('period-year-select').style.display = (mode==='year'||mode==='month') ? '' : 'none';
+  document.getElementById('period-month-select').style.display = mode==='month' ? '' : 'none';
+  renderAnalytics();
+}
+
+function getFilteredTrades() {
+  const yearSel = document.getElementById('period-year-select');
+  const monthSel = document.getElementById('period-month-select');
+  const labelEl = document.getElementById('period-label');
+  if (analyticsPeriod === 'total') { if(labelEl) labelEl.textContent = '全期間'; return trades; }
+  const years = [...new Set(trades.map(t => new Date(t.date).getFullYear()))].sort((a,b)=>b-a);
+  if (years.length > 0 && yearSel.options.length !== years.length) {
+    yearSel.innerHTML = years.map(y => `<option value="${y}">${y}年</option>`).join('');
+  }
+  const selYear = parseInt(yearSel.value) || years[0];
+  if (!selYear) { if(labelEl) labelEl.textContent = 'データなし'; return []; }
+  if (analyticsPeriod === 'year') {
+    if(labelEl) labelEl.textContent = `${selYear}年`;
+    return trades.filter(t => new Date(t.date).getFullYear() === selYear);
+  }
+  const selMonth = parseInt(monthSel.value) || (new Date().getMonth()+1);
+  if(labelEl) labelEl.textContent = `${selYear}年 ${selMonth}月`;
+  return trades.filter(t => {
+    const d = new Date(t.date);
+    return d.getFullYear()===selYear && d.getMonth()+1===selMonth;
+  });
+}
+
 // ANALYTICS
 function switchEquity(mode, btn) {
   equityMode = mode;
-  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.chart-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderEquityCurve();
 }
 
 function renderAnalytics() {
-  const closed = trades.filter(t => t.result!=='OPEN');
+  const periodTrades = getFilteredTrades();
+  const closed = periodTrades.filter(t => t.result!=='OPEN');
   const wins = closed.filter(t => t.result==='WIN');
   const losses = closed.filter(t => t.result==='LOSS');
   const wr = closed.length ? Math.round(wins.length/closed.length*100) : 0;
@@ -1350,8 +1387,8 @@ function renderAnalytics() {
     </div>
     <div class="stat-box">
       <div class="stat-label">総トレード数</div>
-      <div class="stat-value">${trades.length}</div>
-      <div class="stat-sub">${trades.filter(t=>t.result==='OPEN').length}件 オープン中</div>
+      <div class="stat-value">${periodTrades.length}</div>
+      <div class="stat-sub">${periodTrades.filter(t=>t.result==='OPEN').length}件 オープン中</div>
     </div>`;
 
   const pairs = {};
@@ -1410,7 +1447,8 @@ function renderAnalytics() {
 }
 
 function renderEquityCurve() {
-  const closed = [...trades.filter(t=>t.result!=='OPEN')].reverse();
+  const periodTrades = getFilteredTrades();
+  const closed = [...periodTrades.filter(t=>t.result!=='OPEN')].reverse();
   const equity = []; let cum = 0;
   closed.forEach(t => { cum += equityMode==='pnl'?(t.actualPnl||0):(t.actualPips||0); equity.push(cum); });
 
@@ -1432,7 +1470,7 @@ function renderEquityCurve() {
   const label = equityMode==='pnl' ? (isPos?'+':'')+' ¥'+Math.abs(last).toLocaleString() : (isPos?'+':'')+last+' pips';
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
   svg.innerHTML = `
-    <line x1="${pad}" y1="${zeroY}" x2="${w-pad}" y2="${zeroY}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="4"/>
+    <line x1="${pad}" y1="${zeroY}" x2="${w-pad}" y2="${zeroY}" stroke="rgba(0,80,160,0.3)" stroke-width="1.5" stroke-dasharray="4"/>
     <polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round"/>
     <circle cx="${px(equity.length-1)}" cy="${py(last)}" r="4" fill="${col}"/>
     <text x="${Math.min(px(equity.length-1)-6, w-60)}" y="${py(last)-10}" fill="${col}" font-family="IBM Plex Mono" font-size="10">${label}</text>`;
@@ -1449,28 +1487,15 @@ function saveGasUrl() {
 }
 
 function renderSettings() {
-  document.getElementById('set-maxloss').value = settings.maxLoss;
   document.getElementById('set-lotsize').value = settings.lotSize;
-  document.getElementById('disp-maxloss').textContent = '¥' + settings.maxLoss.toLocaleString();
   document.getElementById('disp-lotsize').textContent = settings.lotSize.toLocaleString() + ' 通貨';
   document.getElementById('disp-tradecount').textContent = trades.length + ' 件';
-  updatePreview();
-}
-
-function updatePreview() {
-  const ml = parseFloat(document.getElementById('set-maxloss').value) || settings.maxLoss;
-  const ls = parseFloat(document.getElementById('set-lotsize').value) || settings.lotSize;
-  // Preview: USDJPY, SL 20pips
-  const pipValPerLot = 0.01 * ls;
-  const lots = Math.max(0.01, Math.floor(ml/(20*pipValPerLot)*100)/100);
-  document.getElementById('settings-preview-lot').textContent = lots + ' lot';
 }
 
 function saveSettings() {
-  const ml = parseFloat(document.getElementById('set-maxloss').value);
   const ls = parseFloat(document.getElementById('set-lotsize').value);
-  if (isNaN(ml)||ml<=0||isNaN(ls)||ls<=0) { showToast('⚠️ 正しい値を入力してください'); return; }
-  settings = { maxLoss: ml, lotSize: ls };
+  if (isNaN(ls)||ls<=0) { showToast('⚠️ 正しい値を入力してください'); return; }
+  settings = { lotSize: ls, gasUrl: settings.gasUrl || '' };
   saveSettingsStore();
   renderSettings();
   showToast('✅ 設定を保存しました');
@@ -1629,6 +1654,15 @@ function downloadReport() {
   a.download = 'tracer-report-' + date + '.txt';
   a.click();
   showToast('📥 ダウンロードしました');
+}
+
+// 月別セレクトを現在の月に初期化
+document.getElementById('period-month-select').value = new Date().getMonth() + 1;
+
+// GAS URLデフォルト設定
+if (!settings.gasUrl) {
+  settings.gasUrl = 'https://script.google.com/macros/s/AKfycbyR-oukWCpXvu_FKRxyUmKS4BhSXVGlD3IkEbgFbGXAHxH7kZiS3O3Esgtov1Sbslft/exec';
+  saveSettingsStore();
 }
 
 recalc();
