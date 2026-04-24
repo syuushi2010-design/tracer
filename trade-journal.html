@@ -217,6 +217,28 @@
   .rule-btn.danger:hover { background: rgba(255,64,96,0.1); }
   .rule-cat-label { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text2); margin: 16px 0 8px; display: flex; align-items: center; gap: 8px; }
   .rule-cat-label::before { content: ''; display: inline-block; width: 3px; height: 12px; background: var(--accent); border-radius: 2px; }
+
+  /* AI CHAT */
+  .chat-messages { display: flex; flex-direction: column; gap: 14px; max-height: 480px; overflow-y: auto; margin-bottom: 16px; padding-right: 4px; }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .chat-bubble { display: flex; flex-direction: column; gap: 4px; max-width: 90%; }
+  .chat-bubble.user { align-self: flex-end; align-items: flex-end; }
+  .chat-bubble.ai { align-self: flex-start; align-items: flex-start; }
+  .chat-bubble-inner { padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+  .chat-bubble.user .chat-bubble-inner { background: var(--accent); color: #000; border-bottom-right-radius: 4px; }
+  .chat-bubble.ai .chat-bubble-inner { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
+  .chat-bubble-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .chat-input-row { display: flex; gap: 10px; align-items: flex-end; }
+  .chat-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; padding: 10px 14px; outline: none; resize: none; line-height: 1.6; transition: border-color 0.2s; max-height: 120px; }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-send-btn { background: var(--accent); color: #000; border: none; border-radius: 10px; padding: 10px 18px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
+  .chat-send-btn:hover { background: #00ffb3; }
+  .chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .chat-examples { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chat-example-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 6px 12px; border-radius: 100px; cursor: pointer; transition: all 0.15s; text-align: left; }
+  .chat-example-btn:hover { border-color: var(--accent); color: var(--accent); }
   .empty-icon { font-size: 48px; margin-bottom: 16px; }
   .empty-text { font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
 
@@ -546,6 +568,30 @@
           <div id="report-content" style="font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap"></div>
         </div>
       </div>
+
+      <!-- AI Chat -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-title">AI 個別質問</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.7">
+          全トレードデータをもとに、気になる点を自由に質問できます。
+        </p>
+        <div class="chat-examples" id="chat-examples">
+          <button class="chat-example-btn" onclick="setChatQ('MTFが全て順張りのときの勝率はどれくらいですか？')">MTF全順張りの勝率は？</button>
+          <button class="chat-example-btn" onclick="setChatQ('自信度「高」のトレードで負けているパターンを分析してください')">自信度「高」で負けるパターンは？</button>
+          <button class="chat-example-btn" onclick="setChatQ('週足・日足が逆張りのときの成績を教えてください')">週足・日足逆張りの成績は？</button>
+          <button class="chat-example-btn" onclick="setChatQ('決済が早すぎる傾向はありますか？利確理由と実績pipsから分析してください')">決済が早すぎる傾向は？</button>
+          <button class="chat-example-btn" onclick="setChatQ('直近10件のトレードの傾向と改善点を教えてください')">直近10件の傾向は？</button>
+          <button class="chat-example-btn" onclick="setChatQ('最も勝率が高い通貨ペアと時間帯のパターンを教えてください')">勝率が高いペアは？</button>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chat-input" rows="2" placeholder="例：H4が逆張りのときの勝率は？" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage()}"></textarea>
+          <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">送信</button>
+        </div>
+        <div style="margin-top:8px;display:flex;justify-content:flex-end">
+          <button onclick="clearChat()" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:4px 8px;">会話をクリア</button>
+        </div>
+      </div>
     </div>
 
     <!-- RULES -->
@@ -719,13 +765,16 @@ async function syncToSheet(silent) {
   if (indicator) { indicator.textContent = '⏳ 同期中...'; indicator.style.color = 'var(--warn)'; }
   try {
     const tradesNoImage = trades.map(t => { const {image, ...rest} = t; return rest; });
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 10000);
     await fetch(settings.gasUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'save', source: 'demo', trades: tradesNoImage })
+      body: JSON.stringify({ action: 'save', source: 'demo', trades: tradesNoImage }),
+      signal: controller.signal
     });
-    // no-corsではレスポンスが読めないが、例外が出なければ送信成功とみなす
+    clearTimeout(tid);
     const now = new Date().toLocaleTimeString('ja-JP');
     if (indicator) { indicator.textContent = '✅ 同期済み ' + now; indicator.style.color = 'var(--win)'; }
     if (!silent) showToast('✅ Googleスプレッドシートに同期しました');
@@ -1032,7 +1081,7 @@ async function analyzeChart(dataUrl) {
         recalc();
       }
 
-      aiChips.innerHTML = chips.map(c => `<span class="ai-chip">${c}</span>`).join('');
+      aiChips.innerHTML = chips.map(c => `<span class="ai-chip">${escHtml(c)}</span>`).join('');
     }
   } catch(err) {
     aiStatus.textContent = '解析エラー'; aiContent.textContent = '手動で入力してください。'; aiPulse.style.display = 'none';
@@ -1104,7 +1153,11 @@ function clearForm() {
 }
 
 // HISTORY
-Date.prototype.toHHMM = function() { return ('0'+this.getHours()).slice(-2)+':'+('0'+this.getMinutes()).slice(-2); };
+function escHtml(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function toHHMM(date) { return ('0'+date.getHours()).slice(-2)+':'+('0'+date.getMinutes()).slice(-2); }
 
 function renderHistory() {
   const list = document.getElementById('trade-list');
@@ -1122,7 +1175,7 @@ function renderHistory() {
     const d = new Date(t.date);
     const dirClass = t.dir==='LONG'?'dir-long':'dir-short';
     const badgeCls = {WIN:'badge-win',LOSS:'badge-loss',BE:'badge-be',OPEN:'badge-open'}[t.result];
-    const tags = [...(t.patterns||[]),...(t.emotions||[])].slice(0,3).map(x=>`<span class="trade-tag-sm">${x}</span>`).join('');
+    const tags = [...(t.patterns||[]),...(t.emotions||[])].slice(0,3).map(x=>`<span class="trade-tag-sm">${escHtml(x)}</span>`).join('');
 
     let pipsStr = '', pipsCls = '';
     if (t.actualPips !== null && t.actualPips !== undefined) {
@@ -1142,7 +1195,7 @@ function renderHistory() {
     return `
     <div class="trade-card">
       <div class="trade-card-header" onclick="toggleDetail(${t.id})">
-        <div><div class="trade-pair">${t.pair}</div><div class="date-display">${d.toLocaleDateString('ja-JP')} ${d.toHHMM()} · ${t.timeframe||''}</div></div>
+        <div><div class="trade-pair">${t.pair}</div><div class="date-display">${d.toLocaleDateString('ja-JP')} ${toHHMM(d)} · ${t.timeframe||''}</div></div>
         <div class="trade-tags">${tags}</div>
         <div class="trade-dir ${dirClass}">${t.dir}</div>
         <div class="trade-pips ${pipsCls}">${pipsStr}</div>
@@ -1182,7 +1235,7 @@ function renderHistory() {
                 </div>`).join('')}
             </div>
           </div>` : ''}
-          ${t.memo?`<div class="detail-note">"${t.memo}"</div>`:''}
+          ${t.memo?`<div class="detail-note">"${escHtml(t.memo)}"</div>`:''}
           <div class="edit-row" style="margin-top:10px">
             <span class="inline-label">SL変更:</span>
             <input class="inline-input" type="number" id="sl-edit-${t.id}" step="0.001" placeholder="新しいSL価格">
@@ -1258,7 +1311,7 @@ function renderHistory() {
               <button class="result-btn result-btn-be ${t.result==='BE'?'act':''}" onclick="updateResult(${t.id},'BE')">BE</button>
               <button class="inline-btn" onclick="updateResult(${t.id},'${t.result}')">💾 更新</button>
             </div>
-            ${t.exitMemo ? `<div style="margin-top:8px;background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.15);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.6;font-style:italic">📝 ${t.exitMemo}</div>` : ''}
+            ${t.exitMemo ? `<div style="margin-top:8px;background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.15);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.6;font-style:italic">📝 ${escHtml(t.exitMemo)}</div>` : ''}
           </div>`}
         <div class="detail-actions">
           <button class="btn btn-danger" style="font-size:11px;padding:8px 14px" onclick="deleteTrade(${t.id})">削除</button>
@@ -1534,7 +1587,7 @@ function saveSettings() {
   const ml = parseFloat(document.getElementById('set-maxloss').value);
   const ls = parseFloat(document.getElementById('set-lotsize').value);
   if (isNaN(ml)||ml<=0||isNaN(ls)||ls<=0) { showToast('⚠️ 正しい値を入力してください'); return; }
-  settings = { maxLoss: ml, lotSize: ls };
+  settings = { ...settings, maxLoss: ml, lotSize: ls };
   saveSettingsStore();
   renderSettings();
   showToast('✅ 設定を保存しました');
@@ -1549,6 +1602,7 @@ function exportData() {
 
 function importData(e) {
   const file = e.target.files[0]; if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('⚠️ ファイルサイズが大きすぎます（上限10MB）'); e.target.value = ''; return; }
   const reader = new FileReader();
   reader.onload = ev => {
     try {
@@ -1556,7 +1610,14 @@ function importData(e) {
       if (!Array.isArray(parsed.trades)) throw new Error('invalid');
       if (!confirm(`${parsed.trades.length}件のトレードを読み込みます。\n現在のデータは上書きされます。よろしいですか？`)) return;
       trades = parsed.trades;
-      if (parsed.settings) settings = parsed.settings;
+      if (parsed.settings) {
+        // gasUrlは上書きしない（セキュリティ保護）
+        settings = {
+          ...settings,
+          maxLoss: parsed.settings.maxLoss || settings.maxLoss,
+          lotSize: parsed.settings.lotSize || settings.lotSize,
+        };
+      }
       saveTrades(); saveSettingsStore();
       renderSettings();
       showToast('✅ データを復元しました（' + trades.length + '件）');
@@ -1580,6 +1641,148 @@ function resetAllData() {
 function showToast(msg) {
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===== AI CHAT =====
+let chatHistory = [];
+
+// プロンプトに埋め込む文字列を安全な値に制限する
+function sanitizeForPrompt(val, allowedValues) {
+  const str = String(val ?? '-').slice(0, 50);
+  if (allowedValues) return allowedValues.includes(str) ? str : '-';
+  // 制御文字・バッククォート・テンプレートリテラル特殊文字を除去
+  return str.replace(/[\x00-\x1f`${}\\]/g, '');
+}
+
+function buildTradeContext() {
+  const closed = trades.filter(t => t.result !== 'OPEN');
+  const wins = closed.filter(t => t.result === 'WIN');
+  const losses = closed.filter(t => t.result === 'LOSS');
+  const totalPips = closed.reduce((s, t) => s + (t.actualPips || 0), 0);
+  const wr = closed.length ? Math.round(wins.length / closed.length * 100) : 0;
+
+  const VALID_RESULTS = ['WIN','LOSS','BE','OPEN'];
+  const VALID_DIRS = ['LONG','SHORT'];
+  const VALID_MTF = ['順張り','逆張り'];
+  const VALID_RT = ['あり','なし'];
+  const VALID_CONF = ['高','中','低'];
+
+  const tradeList = closed.slice(0, 50).map(t => {
+    const pair = sanitizeForPrompt(t.pair);
+    const dir  = sanitizeForPrompt(t.dir, VALID_DIRS);
+    const result = sanitizeForPrompt(t.result, VALID_RESULTS);
+    const pips = isFinite(t.actualPips) ? Number(t.actualPips) : '-';
+    const h1  = sanitizeForPrompt(t.mtf?.h1?.dir, VALID_MTF);
+    const h4  = sanitizeForPrompt(t.mtf?.h4?.dir, VALID_MTF);
+    const d1  = sanitizeForPrompt(t.mtf?.d1?.dir, VALID_MTF);
+    const w1  = sanitizeForPrompt(t.mtf?.w1?.dir, VALID_MTF);
+    const rth1 = sanitizeForPrompt(t.rt?.h1, VALID_RT);
+    const rth4 = sanitizeForPrompt(t.rt?.h4, VALID_RT);
+    const rtd1 = sanitizeForPrompt(t.rt?.d1, VALID_RT);
+    const rtw1 = sanitizeForPrompt(t.rt?.w1, VALID_RT);
+    const conf = sanitizeForPrompt(t.confidence, VALID_CONF);
+    const rr   = isFinite(t.rr) ? Number(t.rr) : '-';
+    const reason = sanitizeForPrompt(t.exitReason);
+    return `[${pair} ${dir}] 結果:${result}(${pips}pips) MTF:H1=${h1}/H4=${h4}/D1=${d1}/W1=${w1} 逆T:H1=${rth1}/H4=${rth4}/D1=${rtd1}/W1=${rtw1} 自信度:${conf} RR:${rr} 決済理由:${reason}`;
+  }).join('\n');
+
+  return `【トレード統計サマリー】
+総クローズ数: ${closed.length}件 (WIN: ${wins.length} / LOSS: ${losses.length})
+勝率: ${wr}% / 累積pips: ${totalPips}
+
+【個別トレード一覧（最大50件）】
+${tradeList || 'データなし'}`;
+}
+
+function setChatQ(q) {
+  document.getElementById('chat-input').value = q;
+  document.getElementById('chat-input').focus();
+}
+
+function clearChat() {
+  chatHistory = [];
+  document.getElementById('chat-messages').replaceChildren();
+}
+
+function appendChatBubble(role, text) {
+  const container = document.getElementById('chat-messages');
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble ' + (role === 'user' ? 'user' : 'ai');
+  const label = document.createElement('div');
+  label.className = 'chat-bubble-label';
+  label.textContent = role === 'user' ? 'あなた' : 'AI アナリスト';
+  const inner = document.createElement('div');
+  inner.className = 'chat-bubble-inner';
+  inner.textContent = text;
+  bubble.appendChild(label);
+  bubble.appendChild(inner);
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+  return inner;
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('chat-send-btn');
+  const question = input.value.trim();
+  if (!question) return;
+
+  // 質問の文字数制限（500文字）
+  if (question.length > 500) { showToast('⚠️ 質問は500文字以内で入力してください'); return; }
+
+  const closed = trades.filter(t => t.result !== 'OPEN');
+  if (closed.length < 1) { showToast('⚠️ クローズ済みトレードがありません'); return; }
+
+  input.value = '';
+  btn.disabled = true;
+
+  appendChatBubble('user', question);
+
+  const thinkingEl = appendChatBubble('ai', '分析中...');
+  thinkingEl.style.opacity = '0.5';
+
+  const systemPrompt = `あなたはFXトレードコーチです。以下のトレード記録データをもとに、ユーザーの質問に日本語で具体的・簡潔に答えてください。数値や割合を使って根拠を示してください。
+
+${buildTradeContext()}`;
+
+  const messages = chatHistory.slice(-12).concat([{ role: 'user', content: question }]);
+
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const res = await fetch('https://tight-cloud-7cdb.syuushi2010.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(tid);
+    const data = await res.json();
+    const answer = data.content?.map(i => i.text || '').join('').trim() || '回答を取得できませんでした。';
+
+    thinkingEl.textContent = answer;
+    thinkingEl.style.opacity = '1';
+
+    chatHistory.push({ role: 'user', content: question });
+    chatHistory.push({ role: 'assistant', content: answer });
+    if (chatHistory.length > 12) chatHistory = chatHistory.slice(-12);
+
+  } catch(err) {
+    clearTimeout(tid);
+    thinkingEl.textContent = err.name === 'AbortError'
+      ? 'タイムアウトしました。再度お試しください。'
+      : '通信エラーが発生しました。再度お試しください。';
+    thinkingEl.style.opacity = '1';
+  }
+
+  btn.disabled = false;
+  input.focus();
 }
 
 // ===== AI REPORT =====
@@ -1731,7 +1934,7 @@ function startEditRule(id) {
   if (!r) return;
   const textEl = document.getElementById('rule-text-' + id);
   const actEl  = document.getElementById('rule-act-' + id);
-  textEl.innerHTML = `<textarea class="rule-text-edit" id="rule-edit-input-${id}" rows="2">${r.text}</textarea>`;
+  textEl.innerHTML = `<textarea class="rule-text-edit" id="rule-edit-input-${id}" rows="2">${escHtml(r.text)}</textarea>`;
   actEl.innerHTML = `
     <button class="rule-btn" onclick="saveEditRule(${id})">💾 保存</button>
     <button class="rule-btn" onclick="renderRules()">キャンセル</button>`;
