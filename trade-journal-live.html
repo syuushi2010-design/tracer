@@ -14,7 +14,8 @@
     --win: #0077cc; --loss: #d93050; --be: #d07000;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; min-height: 100vh; overflow-x: hidden; }
+  html { overflow-x: hidden; max-width: 100vw; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; min-height: 100vh; overflow-x: hidden; max-width: 100vw; }
   body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.4; pointer-events: none; z-index: 0; }
 
   #app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
@@ -190,6 +191,35 @@
   .empty-icon { font-size: 48px; margin-bottom: 16px; }
   .empty-text { font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
 
+  /* LOADING OVERLAY */
+  #loading-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+  #loading-overlay.hidden { display: none; }
+  .loading-logo { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: 0.05em; }
+  .loading-logo span { color: var(--accent); }
+  .loading-bar-track { width: 200px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .loading-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; animation: loadingBar 1.5s ease-in-out infinite; }
+  @keyframes loadingBar { 0%{width:0%;margin-left:0} 50%{width:60%;margin-left:20%} 100%{width:0%;margin-left:100%} }
+  .loading-msg { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text2); }
+
+  /* RULES TAB */
+  .rules-container { display: flex; flex-direction: column; gap: 12px; }
+  .rule-add-row { display: flex; gap: 10px; margin-bottom: 8px; }
+  .rule-add-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
+  .rule-add-input:focus { border-color: var(--accent); }
+  .rule-cat-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 10px 14px; outline: none; cursor: pointer; }
+  .rule-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s; }
+  .rule-item:hover { border-color: var(--text3); }
+  .rule-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); min-width: 24px; padding-top: 3px; }
+  .rule-text { flex: 1; font-size: 14px; color: var(--text); line-height: 1.6; word-break: break-all; }
+  .rule-text-edit { flex: 1; background: var(--surface2); border: 1px solid var(--accent); border-radius: 6px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; padding: 6px 10px; outline: none; resize: none; line-height: 1.6; width: 100%; }
+  .rule-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .rule-btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .rule-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .rule-btn.danger { border-color: rgba(217,48,80,0.3); color: var(--danger); }
+  .rule-btn.danger:hover { background: rgba(217,48,80,0.1); }
+  .rule-cat-label { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text2); margin: 16px 0 8px; display: flex; align-items: center; gap: 8px; }
+  .rule-cat-label::before { content: ''; display: inline-block; width: 3px; height: 12px; background: var(--accent); border-radius: 2px; }
+
   #toast { position: fixed; bottom: 32px; right: 32px; background: var(--accent);  font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; padding: 12px 20px; border-radius: 8px; opacity: 0; transform: translateY(8px); transition: all 0.3s; z-index: 999; pointer-events: none; }
   #toast.show { opacity: 1; transform: none; }
 
@@ -282,11 +312,13 @@
       <button class="active" onclick="switchView('record',this)">+ 記録</button>
       <button onclick="switchView('history',this)">履歴</button>
       <button onclick="switchView('analytics',this)">分析</button>
+      <button onclick="switchView('rules',this)">📋 ルール</button>
       <button onclick="switchView('settings',this)">⚙ 設定</button>
     </nav>
   </header>
   <div id="swipe-dots">
     <div class="swipe-dot active"></div>
+    <div class="swipe-dot"></div>
     <div class="swipe-dot"></div>
     <div class="swipe-dot"></div>
     <div class="swipe-dot"></div>
@@ -349,13 +381,6 @@
             <div class="tag-group-label" style="margin-bottom:10px">マルチタイムフレーム</div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
               <div class="calc-box">
-                <div class="calc-label">M15</div>
-                <select id="mtf-m15-dir" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
-                  <option value="順張り" selected>✅ 順張り</option>
-                  <option value="逆張り">⚡ 逆張り</option>
-                </select>
-              </div>
-              <div class="calc-box">
                 <div class="calc-label">H1</div>
                 <select id="mtf-h1-dir" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
                   <option value="順張り" selected>✅ 順張り</option>
@@ -376,18 +401,18 @@
                   <option value="逆張り">⚡ 逆張り</option>
                 </select>
               </div>
+              <div class="calc-box">
+                <div class="calc-label">W1</div>
+                <select id="mtf-w1-dir" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
+                  <option value="順張り" selected>✅ 順張り</option>
+                  <option value="逆張り">⚡ 逆張り</option>
+                </select>
+              </div>
             </div>
 
             <!-- 逆トレンド row -->
             <div class="tag-group-label" style="margin-top:14px;margin-bottom:10px">逆トレンド発生</div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-              <div class="calc-box">
-                <div class="calc-label">M15</div>
-                <select id="rt-m15" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
-                  <option value="なし" selected>— なし</option>
-                  <option value="あり">⚠️ あり</option>
-                </select>
-              </div>
               <div class="calc-box">
                 <div class="calc-label">H1</div>
                 <select id="rt-h1" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
@@ -405,6 +430,13 @@
               <div class="calc-box">
                 <div class="calc-label">D1</div>
                 <select id="rt-d1" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
+                  <option value="なし" selected>— なし</option>
+                  <option value="あり">⚠️ あり</option>
+                </select>
+              </div>
+              <div class="calc-box">
+                <div class="calc-label">W1</div>
+                <select id="rt-w1" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
                   <option value="なし" selected>— なし</option>
                   <option value="あり">⚠️ あり</option>
                 </select>
@@ -534,6 +566,26 @@
       </div>
     </div>
 
+    <!-- RULES -->
+    <div class="view" id="view-rules">
+      <div class="card">
+        <div class="card-title">トレードルール</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.7">自分のトレードルールを記録・管理します。重要なルールは上に移動し、不要になったら削除できます。</p>
+        <div class="rule-add-row">
+          <select id="rule-cat-select" class="rule-cat-select">
+            <option value="エントリー条件">エントリー条件</option>
+            <option value="リスク管理">リスク管理</option>
+            <option value="メンタル">メンタル</option>
+            <option value="決済ルール">決済ルール</option>
+            <option value="その他">その他</option>
+          </select>
+          <input type="text" class="rule-add-input" id="rule-input" placeholder="新しいルールを入力..." onkeydown="if(event.key==='Enter')addRule()">
+          <button class="btn btn-primary" style="padding:10px 20px;font-size:13px" onclick="addRule()">追加</button>
+        </div>
+        <div id="rules-list"></div>
+      </div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="view" id="view-settings">
       <div class="settings-grid">
@@ -614,6 +666,13 @@
   </main>
 </div> <!-- /app -->
 
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div class="loading-logo">TRACER <span>LIVE</span></div>
+  <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+  <div class="loading-msg" id="loading-msg">シートからデータを読み込み中...</div>
+</div>
+
 <!-- MOBILE BOTTOM NAV -->
 <nav id="bottom-nav">
   <button class="active" onclick="goToView(0)">
@@ -629,6 +688,10 @@
     <div class="bn-label">分析</div>
   </button>
   <button onclick="goToView(3)">
+    <div class="bn-icon">📋</div>
+    <div class="bn-label">ルール</div>
+  </button>
+  <button onclick="goToView(4)">
     <div class="bn-icon">⚙️</div>
     <div class="bn-label">設定</div>
   </button>
@@ -696,7 +759,7 @@ async function loadFromSheet() {
 }
 
 // VIEWS & SWIPE
-const VIEWS = ['record', 'history', 'analytics', 'settings'];
+const VIEWS = ['record', 'history', 'analytics', 'rules', 'settings'];
 let currentViewIdx = 0;
 
 function isMobile() { return window.innerWidth <= 700; }
@@ -722,6 +785,7 @@ function goToView(idx, skipCallbacks) {
     if (VIEWS[idx] === 'history') renderHistory();
     if (VIEWS[idx] === 'analytics') renderAnalytics();
     if (VIEWS[idx] === 'settings') renderSettings();
+    if (VIEWS[idx] === 'rules') renderRules();
   }
 }
 
@@ -986,16 +1050,16 @@ function saveTrade() {
   const sl    = parseFloat(document.getElementById('sl').value);
   const lots  = parseFloat(document.getElementById('lot-input').value);
   const mtf = {
-    m15: { dir: document.getElementById('mtf-m15-dir').value },
     h1:  { dir: document.getElementById('mtf-h1-dir').value  },
     h4:  { dir: document.getElementById('mtf-h4-dir').value  },
     d1:  { dir: document.getElementById('mtf-d1-dir').value  },
+    w1:  { dir: document.getElementById('mtf-w1-dir').value  },
   };
   const rt = {
-    m15: document.getElementById('rt-m15').value,
     h1:  document.getElementById('rt-h1').value,
     h4:  document.getElementById('rt-h4').value,
     d1:  document.getElementById('rt-d1').value,
+    w1:  document.getElementById('rt-w1').value,
   };
   const memo  = document.getElementById('memo').value;
   if (!pair || isNaN(entry)) { showToast('⚠️ 通貨ペアとエントリー価格は必須です'); return; }
@@ -1030,8 +1094,8 @@ function saveTrade() {
 
 function clearForm() {
   ['entry','tp','sl','memo','lot-input'].forEach(id => document.getElementById(id).value = '');
-  ['mtf-m15-dir','mtf-h1-dir','mtf-h4-dir','mtf-d1-dir'].forEach(id => { const el = document.getElementById(id); if(el) el.value = '順張り'; });
-  ['rt-m15','rt-h1','rt-h4','rt-d1'].forEach(id => { const el = document.getElementById(id); if(el) el.value = 'なし'; });
+  ['mtf-h1-dir','mtf-h4-dir','mtf-d1-dir','mtf-w1-dir'].forEach(id => { const el = document.getElementById(id); if(el) el.value = '順張り'; });
+  ['rt-h1','rt-h4','rt-d1','rt-w1'].forEach(id => { const el = document.getElementById(id); if(el) el.value = 'なし'; });
   document.getElementById('preview-img').style.display = 'none';
   document.getElementById('upload-placeholder').style.display = '';
   document.getElementById('ai-box').classList.remove('show');
@@ -1105,7 +1169,7 @@ function renderHistory() {
           ${t.mtf ? `<div style="margin-bottom:6px">
             <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">マルチタイムフレーム</div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
-              ${['m15','h1','h4','d1'].map(tf => `
+              ${['h1','h4','d1','w1'].map(tf => `
                 <div style="background:var(--surface2);border-radius:6px;padding:8px 10px;text-align:center">
                   <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">${tf.toUpperCase()}</div>
                   <div style="font-size:11px;font-weight:500;color:${t.mtf[tf]?.dir==='順張り'?'var(--win)':'var(--warn)'}">${t.mtf[tf]?.dir||'順張り'}</div>
@@ -1113,7 +1177,7 @@ function renderHistory() {
             </div>
             <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">逆トレンド発生</div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
-              ${['m15','h1','h4','d1'].map(tf => `
+              ${['h1','h4','d1','w1'].map(tf => `
                 <div style="background:var(--surface2);border-radius:6px;padding:8px 10px;text-align:center">
                   <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">${tf.toUpperCase()}</div>
                   <div style="font-size:11px;font-weight:500;color:${t.rt&&t.rt[tf]==='あり'?'var(--warn)':'var(--text3)'}">${t.rt?t.rt[tf]||'なし':'なし'}</div>
@@ -1569,7 +1633,7 @@ async function generateAIReport() {
 
   // MTF breakdown
   const mtfStats = {};
-  ['m15','h1','h4','d1'].forEach(tf => {
+  ['h1','h4','d1','w1'].forEach(tf => {
     mtfStats[tf] = { 順張り: {w:0,l:0}, 逆張り: {w:0,l:0} };
     closed.forEach(t => {
       const dir = t.mtf?.[tf]?.dir || '順張り';
@@ -1603,7 +1667,7 @@ async function generateAIReport() {
 - 低: ${confStats.低.w}W ${confStats.低.l}L（勝率${confStats.低.w+confStats.低.l>0?Math.round(confStats.低.w/(confStats.低.w+confStats.低.l)*100):'-'}%）
 
 ## マルチタイムフレーム別成績
-${['m15','h1','h4','d1'].map(tf => {
+${['h1','h4','d1','w1'].map(tf => {
   const s = mtfStats[tf];
   return `- ${tf.toUpperCase()}: 順張り ${s.順張り.w}W${s.順張り.l}L / 逆張り ${s.逆張り.w}W${s.逆張り.l}L`;
 }).join('\n')}
@@ -1664,6 +1728,131 @@ if (!settings.gasUrl) {
   settings.gasUrl = 'https://script.google.com/macros/s/AKfycbyR-oukWCpXvu_FKRxyUmKS4BhSXVGlD3IkEbgFbGXAHxH7kZiS3O3Esgtov1Sbslft/exec';
   saveSettingsStore();
 }
+
+// ===== RULES =====
+let rules = JSON.parse(localStorage.getItem('tracer-live-rules') || '[]');
+function saveRules() { localStorage.setItem('tracer-live-rules', JSON.stringify(rules)); }
+
+const RULE_CATS = ['エントリー条件','リスク管理','メンタル','決済ルール','その他'];
+
+function addRule() {
+  const input = document.getElementById('rule-input');
+  const cat = document.getElementById('rule-cat-select').value;
+  const text = input.value.trim();
+  if (!text) { showToast('⚠️ ルールを入力してください'); return; }
+  rules.unshift({ id: Date.now(), text, cat });
+  saveRules(); renderRules(); input.value = '';
+  showToast('✅ ルールを追加しました');
+}
+
+function deleteRule(id) {
+  if (!confirm('このルールを削除しますか？')) return;
+  rules = rules.filter(r => r.id !== id);
+  saveRules(); renderRules();
+}
+
+function moveRule(id, dir) {
+  const idx = rules.findIndex(r => r.id === id);
+  if (idx < 0) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= rules.length) return;
+  [rules[idx], rules[newIdx]] = [rules[newIdx], rules[idx]];
+  saveRules(); renderRules();
+}
+
+function startEditRule(id) {
+  const r = rules.find(x => x.id === id);
+  if (!r) return;
+  const textEl = document.getElementById('rule-text-' + id);
+  const actEl  = document.getElementById('rule-act-' + id);
+  textEl.innerHTML = `<textarea class="rule-text-edit" id="rule-edit-input-${id}" rows="2">${r.text}</textarea>`;
+  actEl.innerHTML = `
+    <button class="rule-btn" onclick="saveEditRule(${id})">💾 保存</button>
+    <button class="rule-btn" onclick="renderRules()">キャンセル</button>`;
+  document.getElementById('rule-edit-input-' + id).focus();
+}
+
+function saveEditRule(id) {
+  const r = rules.find(x => x.id === id);
+  if (!r) return;
+  const val = document.getElementById('rule-edit-input-' + id)?.value.trim();
+  if (!val) { showToast('⚠️ 内容を入力してください'); return; }
+  r.text = val;
+  saveRules(); renderRules();
+  showToast('✅ ルールを更新しました');
+}
+
+function renderRules() {
+  const container = document.getElementById('rules-list');
+  if (!container) return;
+  if (!rules.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text" style="font-family:\'IBM Plex Mono\',monospace;font-size:13px">ルールがまだありません</div></div>';
+    return;
+  }
+  const grouped = {};
+  RULE_CATS.forEach(c => { grouped[c] = []; });
+  rules.forEach(r => {
+    const cat = r.cat || 'その他';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(r);
+  });
+  let html = '';
+  RULE_CATS.forEach(cat => {
+    const catRules = grouped[cat];
+    if (!catRules.length) return;
+    html += `<div class="rule-cat-label">${cat}</div>`;
+    catRules.forEach(r => {
+      const globalIdx = rules.findIndex(x => x.id === r.id);
+      html += `
+      <div class="rule-item">
+        <div class="rule-num">#${globalIdx + 1}</div>
+        <div class="rule-text" id="rule-text-${r.id}">${r.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        <div class="rule-actions" id="rule-act-${r.id}">
+          <button class="rule-btn" onclick="moveRule(${r.id},-1)" title="上へ">↑</button>
+          <button class="rule-btn" onclick="moveRule(${r.id},1)" title="下へ">↓</button>
+          <button class="rule-btn" onclick="startEditRule(${r.id})">編集</button>
+          <button class="rule-btn danger" onclick="deleteRule(${r.id})">削除</button>
+        </div>
+      </div>`;
+    });
+  });
+  container.innerHTML = html;
+}
+
+// ===== 起動時自動シート読み込み =====
+async function autoLoadFromSheet() {
+  if (!settings.gasUrl) {
+    document.getElementById('loading-overlay').classList.add('hidden');
+    return;
+  }
+  const overlay = document.getElementById('loading-overlay');
+  const msg = document.getElementById('loading-msg');
+  const timeout = setTimeout(() => {
+    msg.textContent = '読み込みがタイムアウトしました。ローカルデータを使用します';
+    setTimeout(() => overlay.classList.add('hidden'), 800);
+  }, 8000);
+  try {
+    msg.textContent = 'シートからデータを読み込み中...';
+    const res = await fetch(settings.gasUrl + '?source=live', { method: 'GET' });
+    const data = await res.json();
+    clearTimeout(timeout);
+    if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
+      const imageMap = {};
+      trades.forEach(t => { if (t.image) imageMap[t.id] = t.image; });
+      trades = data.data.map(t => ({ ...t, image: imageMap[t.id] || null }));
+      saveTrades();
+      msg.textContent = '✅ ' + trades.length + '件を読み込みました';
+    } else {
+      msg.textContent = 'ローカルデータを使用します';
+    }
+  } catch(err) {
+    clearTimeout(timeout);
+    msg.textContent = 'オフラインのため、ローカルデータを使用します';
+  }
+  setTimeout(() => overlay.classList.add('hidden'), 600);
+}
+
+autoLoadFromSheet();
 
 recalc();
 </script>
