@@ -14,8 +14,8 @@
     --win: #0077cc; --loss: #d93050; --be: #d07000;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { overflow-x: clip; max-width: 100vw; overscroll-behavior-x: none; }
-  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; min-height: 100vh; overflow-x: clip; max-width: 100vw; overscroll-behavior-x: none; position: relative; }
+  html { overflow-x: hidden; max-width: 100vw; overscroll-behavior-x: none; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; min-height: 100vh; overflow-x: hidden; max-width: 100vw; overscroll-behavior-x: none; position: relative; }
   body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.4; pointer-events: none; z-index: 0; }
 
   #app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
@@ -284,29 +284,20 @@
     header { padding: 12px 16px; }
     header nav { display: none; }
     .logo { font-size: 18px; }
-    main { padding: 0; overflow: clip; width: 100%; max-width: 100vw; }
+    main { padding: 0; overflow: hidden; width: 100%; max-width: 100vw; }
 
-    #app { overflow-x: clip; width: 100%; max-width: 100vw; }
+    #app { overflow-x: hidden; width: 100%; max-width: 100vw; }
 
     /* Mobile swipe layout */
     #swipe-wrapper {
-      display: flex;
-      width: 100vw;
-      max-width: 100vw;
-      overflow: clip;
-      transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
-      will-change: transform;
+      display: block;
+      width: 100%;
     }
     #swipe-wrapper .view {
-      display: block !important;
-      flex: 0 0 100vw;
-      width: 100vw;
-      max-width: 100vw;
-      min-width: 0;
-      overflow-x: hidden;
-      opacity: 1 !important;
-      animation: none !important;
       padding: 16px 16px 100px;
+    }
+    #swipe-wrapper .view.active {
+      animation: none !important;
     }
 
     #swipe-dots { display: flex; }
@@ -882,18 +873,18 @@ function isMobile() { return window.innerWidth <= 700; }
 
 function goToView(idx, skipCallbacks) {
   currentViewIdx = idx;
-  const wrapper = document.getElementById('swipe-wrapper');
 
-  if (isMobile()) {
-    wrapper.style.transform = `translateX(-${idx * window.innerWidth}px)`;
-    document.querySelectorAll('.swipe-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
-    document.querySelectorAll('#bottom-nav button').forEach((b,i) => b.classList.toggle('active', i===idx));
-  } else {
-    wrapper.style.transform = '';
-    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-    document.getElementById('view-' + VIEWS[idx]).classList.add('active');
-    document.querySelectorAll('header nav button').forEach((b,i) => b.classList.toggle('active', i===idx));
-  }
+  // デスクトップ・モバイル共通：active クラスの付け替えで表示切り替え
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + VIEWS[idx]).classList.add('active');
+
+  // ナビの active 状態更新
+  document.querySelectorAll('#bottom-nav button').forEach((b,i) => b.classList.toggle('active', i===idx));
+  document.querySelectorAll('header nav button').forEach((b,i) => b.classList.toggle('active', i===idx));
+  document.querySelectorAll('.swipe-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+
+  // タブ切り替え時に最上部へスクロール（モバイル）
+  if (isMobile()) window.scrollTo(0, 0);
 
   if (!skipCallbacks) {
     if (VIEWS[idx] === 'history') renderHistory();
@@ -908,67 +899,46 @@ function switchView(v, btn) {
   if (idx >= 0) goToView(idx);
 }
 
-// On resize, re-apply correct layout
+// リサイズ時は再描画のみ（transform不使用なので位置ズレなし）
 window.addEventListener('resize', () => {
-  const wrapper = document.getElementById('swipe-wrapper');
-  if (!isMobile()) {
-    wrapper.style.transform = '';
-    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-    document.getElementById('view-' + VIEWS[currentViewIdx]).classList.add('active');
-  } else {
-    wrapper.style.transition = 'none';
-    wrapper.style.transform = `translateX(-${currentViewIdx * window.innerWidth}px)`;
-    setTimeout(() => { wrapper.style.transition = ''; }, 50);
-  }
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + VIEWS[currentViewIdx]).classList.add('active');
 });
 
-// TOUCH SWIPE
+// TOUCH SWIPE（フリック検知のみ・指追従アニメなし）
 (function() {
-  let startX = 0, startY = 0, startTime = 0, dragging = false, dx = 0, verticalLock = false;
-  const getWrapper = () => document.getElementById('swipe-wrapper');
+  let startX = 0, startY = 0, startTime = 0, verticalLock = false, active = false;
 
   document.addEventListener('touchstart', e => {
     if (window.innerWidth > 700) return;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     startTime = Date.now();
-    dragging = true; dx = 0; verticalLock = false;
-    getWrapper().style.transition = 'none';
+    verticalLock = false;
+    active = true;
   }, { passive: true });
 
   document.addEventListener('touchmove', e => {
-    if (!dragging || window.innerWidth > 700) return;
-    dx = e.touches[0].clientX - startX;
+    if (!active || window.innerWidth > 700) return;
+    const dx = e.touches[0].clientX - startX;
     const dy = e.touches[0].clientY - startY;
     if (!verticalLock && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 5) {
-      verticalLock = true; dragging = false; return;
+      verticalLock = true;
     }
-    if (verticalLock) return;
-    if (Math.abs(dx) < Math.abs(dy) * 0.8) { dragging = false; return; }
-    const vw = window.innerWidth;
-    const base = -currentViewIdx * vw;
-    const pos = base + dx;
-    const minPos = -(VIEWS.length - 1) * vw;
-    const clamped = Math.max(minPos - vw * 0.08, Math.min(vw * 0.08, pos));
-    getWrapper().style.transform = `translateX(${clamped}px)`;
   }, { passive: true });
 
   document.addEventListener('touchend', e => {
-    if (window.innerWidth > 700) { dragging = false; return; }
-    if (verticalLock || !dragging) { dragging = false; return; }
-    dragging = false;
+    if (!active || window.innerWidth > 700) { active = false; return; }
+    if (verticalLock) { active = false; return; }
+    active = false;
+    const dx = e.changedTouches[0].clientX - startX;
     const elapsed = Date.now() - startTime;
     const isFlick = Math.abs(dx) > 40 && elapsed < 300;
     const isDrag  = Math.abs(dx) > window.innerWidth * 0.3;
-    const wrapper = getWrapper();
-    wrapper.style.transition = '';
-
     if ((isFlick || isDrag) && dx < 0 && currentViewIdx < VIEWS.length - 1) {
       goToView(currentViewIdx + 1);
     } else if ((isFlick || isDrag) && dx > 0 && currentViewIdx > 0) {
       goToView(currentViewIdx - 1);
-    } else {
-      wrapper.style.transform = `translateX(-${currentViewIdx * window.innerWidth}px)`;
     }
   }, { passive: true });
 })();
