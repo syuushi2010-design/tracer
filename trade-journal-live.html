@@ -806,9 +806,15 @@
 <div id="toast"></div>
 
 <script>
-// STATE
-let trades = JSON.parse(localStorage.getItem('tracer-live-trades') || '[]');
-let settings = JSON.parse(localStorage.getItem('tracer-live-settings') || '{"lotSize":10000,"gasUrl":""}');
+// STATE — Safari/iOS対応: localStorage例外を安全にキャッチ
+function lsGet(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+let trades = lsGet('tracer-live-trades', []);
+let settings = lsGet('tracer-live-settings', {"lotSize":10000,"gasUrl":""});
 let currentImage = null;
 let selectedPatterns = [];
 let confidence = '';
@@ -820,8 +826,8 @@ if (!settings.gasUrl) {
   saveSettingsStore();
 }
 
-function saveTrades() { localStorage.setItem('tracer-live-trades', JSON.stringify(trades)); }
-function saveSettingsStore() { localStorage.setItem('tracer-live-settings', JSON.stringify(settings)); }
+function saveTrades() { lsSet('tracer-live-trades', trades); }
+function saveSettingsStore() { lsSet('tracer-live-settings', settings); }
 
 // GOOGLE SHEETS SYNC
 async function syncToSheet(silent) {
@@ -1055,19 +1061,6 @@ function updateRateDisplay() {
   el.textContent = '';
   el.appendChild(rateSpan);
   el.appendChild(subSpan);
-}
-
-function pnlJpy(pips, pair, lots) {
-  return Math.round(pips * pipValuePerLot(pair) * lots);
-}
-
-// Recommended lots: maxLoss / (slPips × pipValuePerLot) - LIVE版は手入力なので参考値
-function recommendedLots(slPips, pair) {
-  if (!slPips || slPips <= 0) return null;
-  const pvl = pipValuePerLot(pair);
-  if (!pvl) return null;
-  const lots = settings.maxLoss / (slPips * pvl);
-  return Math.max(0.01, Math.floor(lots * 100) / 100);
 }
 
 // RECALC
@@ -2097,8 +2090,8 @@ if (!settings.gasUrl) {
 }
 
 // ===== RULES =====
-let rules = JSON.parse(localStorage.getItem('tracer-live-rules') || '[]');
-function saveRules() { localStorage.setItem('tracer-live-rules', JSON.stringify(rules)); }
+let rules = lsGet('tracer-live-rules', []);
+function saveRules() { lsSet('tracer-live-rules', rules); }
 
 const RULE_CATS = ['エントリー条件','リスク管理','メンタル','決済ルール','その他'];
 
@@ -2188,35 +2181,38 @@ function renderRules() {
 
 // ===== 起動時自動シート読み込み =====
 async function autoLoadFromSheet() {
-  if (!settings.gasUrl) {
-    document.getElementById('loading-overlay').classList.add('hidden');
-    return;
-  }
   const overlay = document.getElementById('loading-overlay');
   const msg = document.getElementById('loading-msg');
-  const timeout = setTimeout(() => {
-    msg.textContent = '読み込みがタイムアウトしました。ローカルデータを使用します';
-    setTimeout(() => overlay.classList.add('hidden'), 800);
-  }, 8000);
+  function hideOverlay() { if (overlay) overlay.classList.add('hidden'); }
+
+  if (!settings.gasUrl) { hideOverlay(); return; }
+
+  const controller = new AbortController();
+  const tid = setTimeout(() => {
+    controller.abort();
+    if (msg) msg.textContent = 'タイムアウト。ローカルデータを使用します';
+    hideOverlay();
+  }, 5000);
+
   try {
-    msg.textContent = 'シートからデータを読み込み中...';
-    const res = await fetch(settings.gasUrl + '?source=live', { method: 'GET' });
+    if (msg) msg.textContent = 'シートからデータを読み込み中...';
+    const res = await fetch(settings.gasUrl + '?source=live', { method: 'GET', signal: controller.signal });
     const data = await res.json();
-    clearTimeout(timeout);
+    clearTimeout(tid);
     if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
       const imageMap = {};
       trades.forEach(t => { if (t.image) imageMap[t.id] = t.image; });
       trades = data.data.map(t => ({ ...t, image: imageMap[t.id] || null }));
       saveTrades();
-      msg.textContent = '✅ ' + trades.length + '件を読み込みました';
+      if (msg) msg.textContent = '✅ ' + trades.length + '件を読み込みました';
     } else {
-      msg.textContent = 'ローカルデータを使用します';
+      if (msg) msg.textContent = 'ローカルデータを使用します';
     }
   } catch(err) {
-    clearTimeout(timeout);
-    msg.textContent = 'オフラインのため、ローカルデータを使用します';
+    clearTimeout(tid);
+    if (msg) msg.textContent = 'オフラインのため、ローカルデータを使用します';
   }
-  setTimeout(() => overlay.classList.add('hidden'), 600);
+  hideOverlay();
 }
 
 autoLoadFromSheet();
