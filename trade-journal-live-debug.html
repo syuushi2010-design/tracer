@@ -133,6 +133,7 @@
   .inline-input:focus { border-color: var(--accent); }
   .inline-btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--accent); color: var(--accent); background: transparent; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
   .inline-btn:hover { background: rgba(0,119,204,0.1); }
+  .edit-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; }
 
   .result-update { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .result-btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; padding: 6px 14px; border-radius: 6px; border: 1px solid; cursor: pointer; transition: all 0.15s; }
@@ -810,7 +811,7 @@
 (function() {
   const panel = document.createElement('div');
   panel.id = 'debug-panel';
-  panel.style.cssText = 'position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.85);color:#0f0;font-family:monospace;font-size:11px;padding:8px;z-index:99999;max-height:40vh;overflow-y:auto;pointer-events:auto;';
+  panel.style.cssText = 'position:fixed;top:0;left:0;right:0;background:rgba(0,0,0,0.85);color:#0f0;font-family:monospace;font-size:11px;padding:8px;z-index:99999;max-height:50vh;overflow-y:auto;pointer-events:auto;';
   panel.innerHTML = '<div style="color:#ff0;font-weight:bold;">🔍 DEBUG LOG (タップで閉じる)</div>';
   panel.addEventListener('click', () => panel.remove());
   document.body.appendChild(panel);
@@ -824,18 +825,14 @@
   }
   window._dbg = dbg;
 
-  // エラーをキャッチ
   window.addEventListener('error', e => {
-    dbg('❌ ERROR: ' + e.message + ' (' + e.filename?.split('/').pop() + ':' + e.lineno + ')', '#f55');
+    dbg('❌ ERROR: ' + e.message + ' @ ' + (e.filename||'').split('/').pop() + ':' + e.lineno + ':' + e.colno, '#f55');
   });
   window.addEventListener('unhandledrejection', e => {
-    dbg('❌ PROMISE: ' + e.reason, '#f55');
+    dbg('❌ PROMISE: ' + (e.reason?.message || e.reason), '#f55');
   });
 
-  // 初期状態を記録
-  dbg('📱 UA: ' + navigator.userAgent.slice(0,80));
-  dbg('📐 innerWidth=' + window.innerWidth + ' innerHeight=' + window.innerHeight);
-  dbg('🚀 Script start');
+  dbg('🚀 Script start UA=' + navigator.userAgent.slice(0,60));
 })();
 // ===== END DEBUG =====
 
@@ -916,12 +913,9 @@ function isMobile() { return window.innerWidth <= 700; }
 function goToView(idx, skipCallbacks) {
   currentViewIdx = idx;
   const wrapper = document.getElementById('swipe-wrapper');
-  if (window._dbg) _dbg('goToView(' + idx + ') isMobile=' + isMobile() + ' wrapper=' + !!wrapper);
 
   if (isMobile()) {
-    const vw = wrapper.clientWidth || window.innerWidth;
-    if (window._dbg) _dbg('  → translateX(-' + (idx * vw) + 'px) clientWidth=' + wrapper.clientWidth, '#ff0');
-    wrapper.style.transform = `translateX(-${idx * vw}px)`;
+    wrapper.style.transform = `translateX(-${idx * window.innerWidth}px)`;
     document.querySelectorAll('.swipe-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
     document.querySelectorAll('#bottom-nav button').forEach((b,i) => b.classList.toggle('active', i===idx));
   } else {
@@ -1488,7 +1482,60 @@ function renderHistory() {
             ${t.exitMemo ? `<div style="margin-top:8px;background:rgba(0,119,204,0.05);border:1px solid rgba(0,119,204,0.15);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.6;font-style:italic">📝 ${escHtml(t.exitMemo)}</div>` : ''}
           </div>`}
         <div class="detail-actions">
+          <button class="btn btn-secondary" style="font-size:11px;padding:8px 14px" onclick="toggleEditForm(${t.id})">✏️ 編集</button>
           <button class="btn btn-danger" style="font-size:11px;padding:8px 14px" onclick="deleteTrade(${t.id})">削除</button>
+        </div>
+        <div id="edit-form-${t.id}" style="display:none;margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">✏️ トレード編集</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div><div class="edit-label">銘柄</div>
+              <select class="inline-input" id="ef-pair-${t.id}" style="width:100%">
+                ${['USDJPY','EURJPY','GBPJPY','AUDJPY','CADJPY','EURUSD','GBPUSD','AUDUSD','NZDUSD','USDCHF','XAUUSD','JP225','US30','US100','XBRUSD','XTIUSD'].map(p=>`<option value="${p}" ${t.pair===p?'selected':''}>${p}</option>`).join('')}
+              </select></div>
+            <div><div class="edit-label">方向</div>
+              <select class="inline-input" id="ef-dir-${t.id}" style="width:100%">
+                <option value="LONG" ${t.dir==='LONG'?'selected':''}>LONG</option>
+                <option value="SHORT" ${t.dir==='SHORT'?'selected':''}>SHORT</option>
+              </select></div>
+            <div><div class="edit-label">エントリー価格</div><input class="inline-input" type="number" id="ef-entry-${t.id}" step="0.001" value="${t.entry||''}" style="width:100%"></div>
+            <div><div class="edit-label">TP</div><input class="inline-input" type="number" id="ef-tp-${t.id}" step="0.001" value="${t.tp||''}" style="width:100%"></div>
+            <div><div class="edit-label">SL</div><input class="inline-input" type="number" id="ef-sl-${t.id}" step="0.001" value="${t.sl||''}" style="width:100%"></div>
+            <div><div class="edit-label">ロット</div><input class="inline-input" type="number" id="ef-lots-${t.id}" step="0.01" value="${t.lots||''}" style="width:100%"></div>
+            <div><div class="edit-label">手法</div>
+              <select class="inline-input" id="ef-method-${t.id}" style="width:100%">
+                <option value="">—</option>
+                ${['野田式','龍王式','混合','その他'].map(m=>`<option value="${m}" ${t.method===m?'selected':''}>${m}</option>`).join('')}
+              </select></div>
+            <div><div class="edit-label">自信度</div>
+              <select class="inline-input" id="ef-conf-${t.id}" style="width:100%">
+                <option value="">—</option>
+                ${['高','中','低'].map(c=>`<option value="${c}" ${t.confidence===c?'selected':''}>${c}</option>`).join('')}
+              </select></div>
+          </div>
+          <div style="margin-bottom:8px"><div class="edit-label">メモ</div>
+            <textarea class="inline-input" id="ef-memo-${t.id}" rows="2" style="width:100%;resize:vertical">${t.memo||''}</textarea></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">MTF方向</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px">
+            ${['h1','h4','d1','w1'].map(tf=>`
+            <div><div class="edit-label">${tf.toUpperCase()}</div>
+              <select class="inline-input" id="ef-mtf-${tf}-${t.id}" style="width:100%">
+                <option value="順張り" ${(t.mtf?.[tf]?.dir||'順張り')==='順張り'?'selected':''}>順張り</option>
+                <option value="逆張り" ${t.mtf?.[tf]?.dir==='逆張り'?'selected':''}>逆張り</option>
+              </select></div>`).join('')}
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">逆トレンド</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">
+            ${['h1','h4','d1','w1'].map(tf=>`
+            <div><div class="edit-label">${tf.toUpperCase()}</div>
+              <select class="inline-input" id="ef-rt-${tf}-${t.id}" style="width:100%">
+                <option value="なし" ${(!t.rt||t.rt[tf]==='なし'||!t.rt[tf])?'selected':''}>なし</option>
+                <option value="あり" ${t.rt?.[tf]==='あり'?'selected':''}>あり</option>
+              </select></div>`).join('')}
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-secondary" style="font-size:11px;padding:8px 14px" onclick="toggleEditForm(${t.id})">キャンセル</button>
+            <button class="btn btn-primary" style="font-size:11px;padding:8px 14px" onclick="saveEditForm(${t.id})">💾 保存</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -1496,6 +1543,54 @@ function renderHistory() {
 }
 
 function toggleDetail(id) { document.getElementById('detail-'+id).classList.toggle('open'); }
+
+function toggleEditForm(id) {
+  const form = document.getElementById('edit-form-' + id);
+  if (!form) return;
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function saveEditForm(id) {
+  const t = trades.find(x => x.id === id);
+  if (!t) return;
+
+  const pair   = document.getElementById('ef-pair-'  + id)?.value || t.pair;
+  const dir    = document.getElementById('ef-dir-'   + id)?.value || t.dir;
+  const entry  = parseFloat(document.getElementById('ef-entry-' + id)?.value) || t.entry;
+  const tp     = parseFloat(document.getElementById('ef-tp-'    + id)?.value) || t.tp;
+  const sl     = parseFloat(document.getElementById('ef-sl-'    + id)?.value) || t.sl;
+  const lots   = parseFloat(document.getElementById('ef-lots-'  + id)?.value) || t.lots;
+  const method = document.getElementById('ef-method-' + id)?.value ?? t.method;
+  const conf   = document.getElementById('ef-conf-'  + id)?.value ?? t.confidence;
+  const memo   = document.getElementById('ef-memo-'  + id)?.value ?? t.memo;
+
+  // MTF
+  const mtf = { ...(t.mtf || {}) };
+  ['h1','h4','d1','w1'].forEach(tf => {
+    const v = document.getElementById('ef-mtf-' + tf + '-' + id)?.value;
+    if (v) mtf[tf] = { ...(mtf[tf] || {}), dir: v };
+  });
+
+  // 逆トレンド
+  const rt = { ...(t.rt || {}) };
+  ['h1','h4','d1','w1'].forEach(tf => {
+    const v = document.getElementById('ef-rt-' + tf + '-' + id)?.value;
+    if (v) rt[tf] = v;
+  });
+
+  // pips / RR 再計算
+  const pipSize = getPipSize(pair);
+  const tpPips = tp && entry ? toPips(Math.abs(tp - entry), pair) : t.tpPips;
+  const slPips = sl && entry ? toPips(Math.abs(sl - entry), pair) : t.slPips;
+  const rr = tpPips && slPips ? Math.round(tpPips / slPips * 100) / 100 : t.rr;
+
+  Object.assign(t, { pair, dir, entry, tp, sl, lots, method, confidence: conf, memo, mtf, rt, tpPips, slPips, rr });
+
+  saveTrades();
+  syncToSheet();
+  renderHistory();
+  showToast('✅ トレードを更新しました');
+}
 
 function updateSL(id) {
   const t = trades.find(x => x.id===id);
@@ -2251,32 +2346,31 @@ async function autoLoadFromSheet() {
   hideOverlay();
 }
 
-if (window._dbg) _dbg('⏳ calling autoLoadFromSheet...');
+if (window._dbg) _dbg('⏳ autoLoadFromSheet...');
 autoLoadFromSheet();
 fetchUsdJpyRate();
 
-if (window._dbg) _dbg('📋 calling recalc()...');
-try { recalc(); if (window._dbg) _dbg('✅ recalc() OK'); } catch(e) { if (window._dbg) _dbg('❌ recalc() FAILED: ' + e.message, '#f55'); }
+if (window._dbg) _dbg('📋 recalc()...');
+try { recalc(); if (window._dbg) _dbg('✅ recalc OK'); } catch(e) { if (window._dbg) _dbg('❌ recalc: ' + e.message + ' line=' + (e.lineNumber||'?'), '#f55'); }
 
-// 初期状態のDOM確認
 setTimeout(() => {
   if (!window._dbg) return;
-  const wrapper = document.getElementById('swipe-wrapper');
+  _dbg('🏁 ===== STATUS =====');
   const overlay = document.getElementById('loading-overlay');
-  _dbg('🏁 DOM check:');
-  _dbg('  wrapper transform="' + (wrapper ? wrapper.style.transform : 'null') + '"');
-  _dbg('  overlay hidden=' + (overlay ? overlay.classList.contains('hidden') : 'null'));
-  _dbg('  isMobile=' + isMobile());
-  _dbg('  activeViews=' + [...document.querySelectorAll('.view.active')].map(el=>el.id).join(','));
-  VIEWS.forEach((v,i) => {
+  _dbg('overlay hidden=' + (overlay ? overlay.classList.contains('hidden') : 'null'));
+  _dbg('isMobile=' + isMobile());
+  _dbg('trades count=' + (trades?.length || 0));
+  _dbg('activeViews=' + [...document.querySelectorAll('.view.active')].map(el=>el.id).join(','));
+  VIEWS.forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) {
       const cs = window.getComputedStyle(el);
-      _dbg('  view-' + v + ': display=' + cs.display + ' visibility=' + cs.visibility);
+      _dbg('  view-' + v + ': display=' + cs.display);
+    } else {
+      _dbg('  view-' + v + ': NOT FOUND', '#f55');
     }
   });
 }, 3000);
-
 </script>
 </body>
 </html>
