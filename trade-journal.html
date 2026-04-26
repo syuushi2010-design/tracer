@@ -1357,7 +1357,60 @@ function renderHistory() {
             ${t.exitMemo ? `<div style="margin-top:8px;background:rgba(0,229,160,0.05);border:1px solid rgba(0,229,160,0.15);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.6;font-style:italic">📝 ${escHtml(t.exitMemo)}</div>` : ''}
           </div>`}
         <div class="detail-actions">
+          <button class="btn btn-secondary" style="font-size:11px;padding:8px 14px" onclick="toggleEditForm(${t.id})">✏️ 編集</button>
           <button class="btn btn-danger" style="font-size:11px;padding:8px 14px" onclick="deleteTrade(${t.id})">削除</button>
+        </div>
+        <div id="edit-form-${t.id}" style="display:none;margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">✏️ トレード編集</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div><div class="edit-label">銘柄</div>
+              <select class="inline-input" id="ef-pair-${t.id}" style="width:100%">
+                <option value="USDJPY" ${t.pair==='USDJPY'?'selected':''}>USDJPY</option><option value="EURJPY" ${t.pair==='EURJPY'?'selected':''}>EURJPY</option><option value="GBPJPY" ${t.pair==='GBPJPY'?'selected':''}>GBPJPY</option><option value="AUDJPY" ${t.pair==='AUDJPY'?'selected':''}>AUDJPY</option><option value="CADJPY" ${t.pair==='CADJPY'?'selected':''}>CADJPY</option><option value="EURUSD" ${t.pair==='EURUSD'?'selected':''}>EURUSD</option><option value="GBPUSD" ${t.pair==='GBPUSD'?'selected':''}>GBPUSD</option><option value="AUDUSD" ${t.pair==='AUDUSD'?'selected':''}>AUDUSD</option><option value="NZDUSD" ${t.pair==='NZDUSD'?'selected':''}>NZDUSD</option><option value="USDCHF" ${t.pair==='USDCHF'?'selected':''}>USDCHF</option><option value="XAUUSD" ${t.pair==='XAUUSD'?'selected':''}>XAUUSD</option>
+              </select></div>
+            <div><div class="edit-label">方向</div>
+              <select class="inline-input" id="ef-dir-${t.id}" style="width:100%">
+                <option value="LONG" ${t.dir==='LONG'?'selected':''} >LONG</option>
+                <option value="SHORT" ${t.dir==='SHORT'?'selected':''} >SHORT</option>
+              </select></div>
+            <div><div class="edit-label">エントリー価格</div><input class="inline-input" type="number" id="ef-entry-${t.id}" step="0.001" value="${t.entry||''}" style="width:100%"></div>
+            <div><div class="edit-label">TP</div><input class="inline-input" type="number" id="ef-tp-${t.id}" step="0.001" value="${t.tp||''}" style="width:100%"></div>
+            <div><div class="edit-label">SL</div><input class="inline-input" type="number" id="ef-sl-${t.id}" step="0.001" value="${t.sl||''}" style="width:100%"></div>
+            <div><div class="edit-label">推奨ロット</div><input class="inline-input" type="number" id="ef-lots-${t.id}" step="0.01" value="${t.recommendedLots||''}" style="width:100%"></div>
+            <div><div class="edit-label">手法</div>
+              <select class="inline-input" id="ef-method-${t.id}" style="width:100%">
+                <option value="">—</option>
+                ${['野田式','龍王式','混合','その他'].map(m=>`<option value="${m}" ${t.method===m?'selected':''}>${m}</option>`).join('')}
+              </select></div>
+            <div><div class="edit-label">自信度</div>
+              <select class="inline-input" id="ef-conf-${t.id}" style="width:100%">
+                <option value="">—</option>
+                ${['高','中','低'].map(c=>`<option value="${c}" ${t.confidence===c?'selected':''}>${c}</option>`).join('')}
+              </select></div>
+          </div>
+          <div style="margin-bottom:8px"><div class="edit-label">メモ</div>
+            <textarea class="inline-input" id="ef-memo-${t.id}" rows="2" style="width:100%;resize:vertical">${t.memo||''}</textarea></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">MTF方向</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px">
+            ${['h1','h4','d1','w1'].map(tf=>`
+            <div><div class="edit-label">${tf.toUpperCase()}</div>
+              <select class="inline-input" id="ef-mtf-${tf}-${t.id}" style="width:100%">
+                <option value="順張り" ${(t.mtf?.[tf]?.dir||'順張り')==='順張り'?'selected':''} >順張り</option>
+                <option value="逆張り" ${t.mtf?.[tf]?.dir==='逆張り'?'selected':''} >逆張り</option>
+              </select></div>`).join('')}
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">逆トレンド</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">
+            ${['h1','h4','d1','w1'].map(tf=>`
+            <div><div class="edit-label">${tf.toUpperCase()}</div>
+              <select class="inline-input" id="ef-rt-${tf}-${t.id}" style="width:100%">
+                <option value="なし" ${(!t.rt||t.rt[tf]==='なし'||!t.rt[tf])?'selected':''} >なし</option>
+                <option value="あり" ${t.rt?.[tf]==='あり'?'selected':''} >あり</option>
+              </select></div>`).join('')}
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-secondary" style="font-size:11px;padding:8px 14px" onclick="toggleEditForm(${t.id})">キャンセル</button>
+            <button class="btn btn-primary" style="font-size:11px;padding:8px 14px" onclick="saveEditForm(${t.id})">💾 保存</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -1365,6 +1418,53 @@ function renderHistory() {
 }
 
 function toggleDetail(id) { document.getElementById('detail-'+id).classList.toggle('open'); }
+
+function toggleEditForm(id) {
+  const form = document.getElementById('edit-form-' + id);
+  if (!form) return;
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function saveEditForm(id) {
+  const t = trades.find(x => x.id === id);
+  if (!t) return;
+
+  const pair   = document.getElementById('ef-pair-'  + id)?.value || t.pair;
+  const dir    = document.getElementById('ef-dir-'   + id)?.value || t.dir;
+  const entry  = parseFloat(document.getElementById('ef-entry-' + id)?.value) || t.entry;
+  const tp     = parseFloat(document.getElementById('ef-tp-'    + id)?.value) || t.tp;
+  const sl     = parseFloat(document.getElementById('ef-sl-'    + id)?.value) || t.sl;
+  const recLots = parseFloat(document.getElementById('ef-lots-' + id)?.value) || t.recommendedLots;
+  const method = document.getElementById('ef-method-' + id)?.value ?? t.method;
+  const conf   = document.getElementById('ef-conf-'  + id)?.value ?? t.confidence;
+  const memo   = document.getElementById('ef-memo-'  + id)?.value ?? t.memo;
+
+  // MTF
+  const mtf = { ...(t.mtf || {}) };
+  ['h1','h4','d1','w1'].forEach(tf => {
+    const v = document.getElementById('ef-mtf-' + tf + '-' + id)?.value;
+    if (v) mtf[tf] = { ...(mtf[tf] || {}), dir: v };
+  });
+
+  // 逆トレンド
+  const rt = { ...(t.rt || {}) };
+  ['h1','h4','d1','w1'].forEach(tf => {
+    const v = document.getElementById('ef-rt-' + tf + '-' + id)?.value;
+    if (v) rt[tf] = v;
+  });
+
+  // pips / RR 再計算
+  const tpPips = tp && entry ? toPips(Math.abs(tp - entry), pair) : t.tpPips;
+  const slPips = sl && entry ? toPips(Math.abs(sl - entry), pair) : t.slPips;
+  const rr = tpPips && slPips ? Math.round(tpPips / slPips * 100) / 100 : t.rr;
+
+  Object.assign(t, { pair, dir, entry, tp, sl, recommendedLots: recLots, method, confidence: conf, memo, mtf, rt, tpPips, slPips, rr });
+
+  saveTrades();
+  syncToSheet();
+  renderHistory();
+  showToast('✅ トレードを更新しました');
+}
 
 function updateSL(id) {
   const t = trades.find(x => x.id===id);
