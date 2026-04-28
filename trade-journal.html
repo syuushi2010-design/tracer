@@ -205,12 +205,13 @@
   .rule-add-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
   .rule-add-input:focus { border-color: var(--accent); }
   .rule-cat-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 10px 14px; outline: none; cursor: pointer; }
-  .rule-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s; }
+  .rule-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s; }
   .rule-item:hover { border-color: var(--text3); }
-  .rule-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); min-width: 24px; padding-top: 3px; }
+  .rule-item-top { display: flex; align-items: flex-start; gap: 12px; }
+  .rule-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); min-width: 24px; padding-top: 3px; flex-shrink: 0; }
   .rule-text { flex: 1; font-size: 14px; color: var(--text); line-height: 1.6; word-break: break-all; }
   .rule-text-edit { flex: 1; background: var(--surface2); border: 1px solid var(--accent); border-radius: 6px; color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 14px; padding: 6px 10px; outline: none; resize: none; line-height: 1.6; width: 100%; }
-  .rule-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .rule-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   .rule-btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
   .rule-btn:hover { border-color: var(--accent); color: var(--accent); }
   .rule-btn.danger { border-color: rgba(255,64,96,0.3); color: var(--danger); }
@@ -463,6 +464,54 @@
                 </select>
               </div>
             </div>
+
+            <div class="tag-group-label" style="margin-top:14px;margin-bottom:10px">フィボナッチ調整幅</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+              <div class="calc-box">
+                <div class="calc-label">H1</div>
+                <select id="fibo-h1" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
+                  <option value="">—</option>
+                  <option value="23.6">23.6%</option>
+                  <option value="38.2">38.2%</option>
+                  <option value="50.0">50.0%</option>
+                  <option value="61.8">61.8%</option>
+                  <option value="78.6">78.6%</option>
+                </select>
+              </div>
+              <div class="calc-box">
+                <div class="calc-label">H4</div>
+                <select id="fibo-h4" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
+                  <option value="">—</option>
+                  <option value="23.6">23.6%</option>
+                  <option value="38.2">38.2%</option>
+                  <option value="50.0">50.0%</option>
+                  <option value="61.8">61.8%</option>
+                  <option value="78.6">78.6%</option>
+                </select>
+              </div>
+              <div class="calc-box">
+                <div class="calc-label">D1</div>
+                <select id="fibo-d1" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
+                  <option value="">—</option>
+                  <option value="23.6">23.6%</option>
+                  <option value="38.2">38.2%</option>
+                  <option value="50.0">50.0%</option>
+                  <option value="61.8">61.8%</option>
+                  <option value="78.6">78.6%</option>
+                </select>
+              </div>
+              <div class="calc-box">
+                <div class="calc-label">W1</div>
+                <select id="fibo-w1" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;outline:none;width:100%">
+                  <option value="">—</option>
+                  <option value="23.6">23.6%</option>
+                  <option value="38.2">38.2%</option>
+                  <option value="50.0">50.0%</option>
+                  <option value="61.8">61.8%</option>
+                  <option value="78.6">78.6%</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div class="calc-row">
@@ -685,7 +734,7 @@
             <div style="display:flex;gap:8px;margin-bottom:16px">
               <button class="btn btn-primary" style="flex:1;justify-content:center;font-size:12px;padding:10px" onclick="saveGasUrl()">URLを保存</button>
               <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:12px;padding:10px" onclick="loadFromSheet()">📥 シートから読込</button>
-              <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:12px;padding:10px" onclick="syncToSheet(false)">📤 今すぐ同期</button>
+              <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:12px;padding:10px" onclick="syncToSheet(false)">💾 履歴を保存</button>
             </div>
             <div class="settings-title" style="margin-bottom:12px">ローカルバックアップ</div>
             <div style="display:flex;flex-direction:column;gap:10px">
@@ -1119,6 +1168,12 @@ function saveTrade() {
     d1:  document.getElementById('rt-d1').value,
     w1:  document.getElementById('rt-w1').value,
   };
+  const fibo = {
+    h1: document.getElementById('fibo-h1').value || null,
+    h4: document.getElementById('fibo-h4').value || null,
+    d1: document.getElementById('fibo-d1').value || null,
+    w1: document.getElementById('fibo-w1').value || null,
+  };
   const memo  = document.getElementById('memo').value;
   const method = document.getElementById('method').value;
   if (!pair || isNaN(entry)) { showToast('⚠️ 通貨ペアとエントリー価格は必須です'); return; }
@@ -1141,7 +1196,7 @@ function saveTrade() {
     recommendedLots: lots,
     snapshotMaxLoss: settings.maxLoss,
     snapshotLotSize: settings.lotSize,
-    mtf, rt,
+    mtf, rt, fibo,
     patterns: [],
     confidence, method,
     emotions: [],
@@ -1156,6 +1211,7 @@ function clearForm() {
   ['entry','tp','sl','memo'].forEach(id => document.getElementById(id).value = '');
   ['mtf-h1-dir','mtf-h4-dir','mtf-d1-dir','mtf-w1-dir'].forEach(id => { const el = document.getElementById(id); if(el) el.value = '順張り'; });
   ['rt-h1','rt-h4','rt-d1','rt-w1'].forEach(id => { const el = document.getElementById(id); if(el) el.value = 'なし'; });
+  ['fibo-h1','fibo-h4','fibo-d1','fibo-w1'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('preview-img').style.display = 'none';
   document.getElementById('upload-placeholder').style.display = '';
   document.getElementById('ai-box').classList.remove('show');
@@ -1252,6 +1308,15 @@ function renderHistory() {
                   <div style="font-size:11px;font-weight:500;color:${t.rt&&t.rt[tf]==='あり'?'var(--warn)':'var(--text3)'}">${t.rt?t.rt[tf]||'なし':'なし'}</div>
                 </div>`).join('')}
             </div>
+            ${(t.fibo && Object.values(t.fibo).some(v => v)) ? `
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">フィボナッチ調整幅</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
+              ${['h1','h4','d1','w1'].map(tf => `
+                <div style="background:var(--surface2);border-radius:6px;padding:8px 10px;text-align:center">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">${tf.toUpperCase()}</div>
+                  <div style="font-size:11px;font-weight:500;color:${t.fibo?.[tf]?'var(--accent)':'var(--text3)'}">${t.fibo?.[tf] ? t.fibo[tf]+'%' : '—'}</div>
+                </div>`).join('')}
+            </div>` : ''}
           </div>` : ''}
           ${t.memo?`<div class="detail-note">"${escHtml(t.memo)}"</div>`:''}
           <div class="edit-row" style="margin-top:10px">
@@ -1837,11 +1902,15 @@ function buildTradeContext() {
     const rth4 = sanitizeForPrompt(t.rt?.h4, VALID_RT);
     const rtd1 = sanitizeForPrompt(t.rt?.d1, VALID_RT);
     const rtw1 = sanitizeForPrompt(t.rt?.w1, VALID_RT);
+    const fiboh1 = t.fibo?.h1 ? sanitizeForPrompt(t.fibo.h1) : '-';
+    const fiboh4 = t.fibo?.h4 ? sanitizeForPrompt(t.fibo.h4) : '-';
+    const fibod1 = t.fibo?.d1 ? sanitizeForPrompt(t.fibo.d1) : '-';
+    const fibow1 = t.fibo?.w1 ? sanitizeForPrompt(t.fibo.w1) : '-';
     const conf = sanitizeForPrompt(t.confidence, VALID_CONF);
     const rr   = isFinite(t.rr) ? Number(t.rr) : '-';
     const reason = sanitizeForPrompt(t.exitReason);
     const method = sanitizeForPrompt(t.method, ['野田式','龍王式','混合','その他']);
-    return `[${pair} ${dir}] 結果:${result}(${pips}pips) MTF:H1=${h1}/H4=${h4}/D1=${d1}/W1=${w1} 逆T:H1=${rth1}/H4=${rth4}/D1=${rtd1}/W1=${rtw1} 自信度:${conf} 手法:${method} RR:${rr} 決済理由:${reason}`;
+    return `[${pair} ${dir}] 結果:${result}(${pips}pips) MTF:H1=${h1}/H4=${h4}/D1=${d1}/W1=${w1} 逆T:H1=${rth1}/H4=${rth4}/D1=${rtd1}/W1=${rtw1} フィボ:H1=${fiboh1}/H4=${fiboh4}/D1=${fibod1}/W1=${fibow1} 自信度:${conf} 手法:${method} RR:${rr} 決済理由:${reason}`;
   }).join('\n');
 
   return `【トレード統計サマリー】
@@ -2132,8 +2201,10 @@ function renderRules() {
       const globalIdx = rules.findIndex(x => x.id === r.id);
       html += `
       <div class="rule-item">
-        <div class="rule-num">#${globalIdx + 1}</div>
-        <div class="rule-text" id="rule-text-${r.id}">${r.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        <div class="rule-item-top">
+          <div class="rule-num">#${globalIdx + 1}</div>
+          <div class="rule-text" id="rule-text-${r.id}">${r.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        </div>
         <div class="rule-actions" id="rule-act-${r.id}">
           <button class="rule-btn" onclick="moveRule(${r.id},-1)" title="上へ">↑</button>
           <button class="rule-btn" onclick="moveRule(${r.id},1)" title="下へ">↓</button>
