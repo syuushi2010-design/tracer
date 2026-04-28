@@ -869,16 +869,27 @@ async function loadFromSheet() {
   if (!settings.gasUrl) { showToast('⚠️ スプレッドシートURLが未設定です'); return; }
   showToast('⏳ データを読み込み中...');
   try {
-    const res = await fetch(settings.gasUrl + '?source=demo', { method: 'GET' });
-    const data = await res.json();
+    const [tradesRes, rulesRes] = await Promise.all([
+      fetch(settings.gasUrl + '?source=demo', { method: 'GET' }),
+      fetch(settings.gasUrl + '?source=rules', { method: 'GET' })
+    ]);
+    const data = await tradesRes.json();
     if (data.ok && Array.isArray(data.data)) {
       const imageMap = {};
       trades.forEach(t => { if (t.image) imageMap[t.id] = t.image; });
       trades = data.data.map(t => ({ ...t, image: imageMap[t.id] || null }));
       saveTrades();
-      showToast('✅ ' + trades.length + '件を読み込みました');
       renderHistory();
     } else throw new Error();
+    try {
+      const rulesData = await rulesRes.json();
+      if (rulesData.ok && Array.isArray(rulesData.data) && rulesData.data.length > 0) {
+        rules = rulesData.data.map(r => ({ ...r, cat: r.cat || r.category || 'その他' }));
+        lsSet('tracer-rules', rules);
+        renderRules();
+      }
+    } catch(re) {}
+    showToast('✅ ' + trades.length + '件を読み込みました');
   } catch(err) {
     showToast('⚠️ 読み込みに失敗しました');
   }
@@ -2127,7 +2138,26 @@ function downloadReport() {
 
 // ===== RULES =====
 let rules = lsGet('tracer-rules', []);
-function saveRules() { lsSet('tracer-rules', rules); }
+function saveRules() {
+  lsSet('tracer-rules', rules);
+  syncRulesToSheet();
+}
+
+async function syncRulesToSheet() {
+  if (!settings.gasUrl) return;
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 10000);
+    await fetch(settings.gasUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'saveRules', rules }),
+      signal: controller.signal
+    });
+    clearTimeout(tid);
+  } catch(err) {}
+}
 
 const RULE_CATS = ['エントリー条件','リスク管理','メンタル','決済ルール','その他'];
 
@@ -2234,18 +2264,28 @@ async function autoLoadFromSheet() {
 
   try {
     if (msg) msg.textContent = 'シートからデータを読み込み中...';
-    const res = await fetch(settings.gasUrl + '?source=demo', { method: 'GET', signal: controller.signal });
-    const data = await res.json();
+    const [tradesRes, rulesRes] = await Promise.all([
+      fetch(settings.gasUrl + '?source=demo', { method: 'GET', signal: controller.signal }),
+      fetch(settings.gasUrl + '?source=rules', { method: 'GET', signal: controller.signal })
+    ]);
+    const tradesData = await tradesRes.json();
     clearTimeout(tid);
-    if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
+    if (tradesData.ok && Array.isArray(tradesData.data) && tradesData.data.length > 0) {
       const imageMap = {};
       trades.forEach(t => { if (t.image) imageMap[t.id] = t.image; });
-      trades = data.data.map(t => ({ ...t, image: imageMap[t.id] || null }));
+      trades = tradesData.data.map(t => ({ ...t, image: imageMap[t.id] || null }));
       saveTrades();
       if (msg) msg.textContent = '✅ ' + trades.length + '件を読み込みました';
     } else {
       if (msg) msg.textContent = 'ローカルデータを使用します';
     }
+    try {
+      const rulesData = await rulesRes.json();
+      if (rulesData.ok && Array.isArray(rulesData.data) && rulesData.data.length > 0) {
+        rules = rulesData.data.map(r => ({ ...r, cat: r.cat || r.category || 'その他' }));
+        lsSet('tracer-rules', rules);
+      }
+    } catch(re) {}
   } catch(err) {
     clearTimeout(tid);
     if (msg) msg.textContent = 'オフラインのため、ローカルデータを使用します';
